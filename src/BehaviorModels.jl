@@ -6,7 +6,7 @@ using Distributions
 using HiddenMarkovModels
 using StatsFuns
 
-include("IO.jl")
+include("DataStructs.jl")
 include("TuringModels.jl")
 
 end
