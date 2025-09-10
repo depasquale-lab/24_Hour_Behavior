@@ -1,6 +1,14 @@
+name = "BehaviorModels"
+uuid = "a9f1d2d2-4279-4a26-9af5-afc0ddc3b04f"
+authors = "Ryan Senne"
+
 [deps]
 Bijectors = "76274a88-744f-5084-9051-94815aaf08c4"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
+
+[compat]
+LinearAlgebra = "1.11.0"
