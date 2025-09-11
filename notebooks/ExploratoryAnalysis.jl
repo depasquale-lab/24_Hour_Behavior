@@ -31,7 +31,7 @@ begin
 	using DataFrames
 	using PlutoUI
 	
-	include("./src/BehaviorModels.jl")
+	include("../src/BehaviorModels.jl")
 	using .BehaviorModels
 end
 
@@ -43,11 +43,12 @@ md"## Load in the data"
 
 # ╔═╡ 95ad8b8c-c986-4d13-9ff8-0bdbc14756fa
 begin
-	data_path = "data"
+	data_path = "./../data"
 	file_name = "processed_rat_data.csv.gz"
 
 	# load the data
 	rat_df = CSV.read(joinpath(data_path, file_name), DataFrame)
+	rat_df = rat_df[rat_df.daily .== "24 hr", :]
 
 	# useful variables for later
 	rats = unique(rat_df.name);
@@ -124,9 +125,32 @@ begin
 	rat_behavior = rat_df[rat_df.name .== rat_pacf, :]
 	behavior_trials = [BehaviorTrial(r.delta_flashes, r.choose_right, r.correct, r.rt) for r in eachrow(rat_behavior)]
 	
-	model = simple_ar_model(behavior_trials, 6)
+	model = simple_ar_model(behavior_trials, 8)
 	posterior_sample = sample(model, NUTS(), 200)
+
+	describe(posterior_sample)
 end
+
+# ╔═╡ fb38f51a-52a1-43cd-9d73-61da5b23fe21
+md" ## Fit a Bayesian GLM-HMM to the choice data."
+
+# ╔═╡ 3174df5d-7ebc-4d7d-8516-3a7a4f5f1748
+begin
+	# create a vec-of-vecs containing the GLM-Obs data
+	df_tagged, g = tag_sessions!(rat_behavior)
+	sessions = summarize_sessions(g)
+
+	data_sequences = to_glmhmm_sequences(df_tagged)
+end
+
+# ╔═╡ cd220521-e8ed-4430-92d2-c0b32f53139c
+begin
+	glm_hmm_model = glmhmm(data_sequences, 3)
+	glmhmm_sample = sample(glm_hmm_model, NUTS(), 1000)
+end
+
+# ╔═╡ 98e70294-3e28-464d-8e2d-59585ee86bc4
+describe(glmhmm_sample)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2737,5 +2761,9 @@ version = "1.9.2+0"
 # ╠═6858b365-f6fb-4678-9807-dbc4c6052602
 # ╟─4dbfc625-50ff-4949-a15b-cbee939c1f6d
 # ╠═7e86cf86-f0d9-40ac-850c-63033eca1895
+# ╟─fb38f51a-52a1-43cd-9d73-61da5b23fe21
+# ╠═3174df5d-7ebc-4d7d-8516-3a7a4f5f1748
+# ╠═cd220521-e8ed-4430-92d2-c0b32f53139c
+# ╠═98e70294-3e28-464d-8e2d-59585ee86bc4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
