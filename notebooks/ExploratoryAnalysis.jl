@@ -150,7 +150,9 @@ begin
 end
 
 # ╔═╡ 98e70294-3e28-464d-8e2d-59585ee86bc4
-describe(glmhmm_sample)
+begin
+	mean(glmhmm_sample)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
