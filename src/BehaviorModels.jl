@@ -15,5 +15,6 @@ include("DataStructs.jl")
 include("TuringModels.jl")
 include("PreprocessingUtilities.jl")
 include("Utilities.jl")
+include("HMMs.jl")
 
 end
