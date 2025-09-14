@@ -4,13 +4,19 @@ authors = "Ryan Senne"
 
 [deps]
 Bijectors = "76274a88-744f-5084-9051-94815aaf08c4"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
 
 [compat]
+DataFrames = "1.8.0"
 Dates = "1.11.0"
+DensityInterface = "0.4.0"
 LinearAlgebra = "1.11.0"
+StatsAPI = "1.7.1"

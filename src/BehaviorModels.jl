@@ -10,6 +10,8 @@ using Base.Threads
 using LinearAlgebra
 using Dates
 using DataFrames
+using DensityInterface
+using StatsAPI
 
 include("DataStructs.jl")
 include("TuringModels.jl")
