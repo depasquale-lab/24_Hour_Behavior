@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.17
+# v0.20.10
 
 using Markdown
 using InteractiveUtils
@@ -30,6 +30,8 @@ begin
 	using CSV
 	using DataFrames
 	using PlutoUI
+	using DensityInterface
+	using StatsAPI
 	
 	include("../src/BehaviorModels.jl")
 	using .BehaviorModels
@@ -149,37 +151,9 @@ begin
 	glmhmm_sample = sample(glm_hmm_model, NUTS(), 1000)
 end
 
-# ╔═╡ 98e70294-3e28-464d-8e2d-59585ee86bc4
+# ╔═╡ b1573e01-3920-423a-a201-3d489ce3d77e
 begin
-	function turing_chain_to_hmm(chain)
-	    # Extract means from the chain
-	    means = mean(chain)
-	    
-	    # Get number of states from β₀ parameters
-	    β₀_keys = [key for key in keys(means) if occursin("β₀", string(key))]
-	    K = length(β₀_keys)
-	    
-	    # Extract parameters
-	    β₀ = [means[Symbol("β₀[$k]")] for k in 1:K]
-	    β₁ = [means[Symbol("β₁[$k]")] for k in 1:K]
-	    π₀ = [means[Symbol("π₀[$k]")] for k in 1:K]
-	    
-	    # Extract transition matrix
-	    T = Matrix{Float64}(undef, K, K)
-	    for i in 1:K
-	        for j in 1:K
-	            T[i, j] = means[Symbol("Trows[$i][$j]")]
-	        end
-	    end
-	    
-	    # Create emission distributions
-	    emissions = [BernoulliGLM(β₀[k], [β₁[k]]) for k in 1:K]
-	    
-	    # Create and return HMM
-	    return HMM(π₀, T, emissions)
-	end
-
-	hmm = turing_chain_to_hmm(glmhmm_sample)
+	describe(glmhmm_sample)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -189,10 +163,12 @@ Bijectors = "76274a88-744f-5084-9051-94815aaf08c4"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
@@ -203,9 +179,11 @@ Bijectors = "~0.15.10"
 CSV = "~0.10.15"
 CodecZlib = "~0.7.8"
 DataFrames = "~1.7.1"
+DensityInterface = "~0.4.0"
 Distributions = "~0.25.120"
 HiddenMarkovModels = "~0.7.0"
 PlutoUI = "~0.7.65"
+StatsAPI = "~1.7.1"
 StatsBase = "~0.34.6"
 StatsFuns = "~1.5.0"
 StatsPlots = "~0.15.7"
@@ -216,9 +194,9 @@ Turing = "~0.40.2"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.5"
+julia_version = "1.11.7"
 manifest_format = "2.0"
-project_hash = "54edf99bd8c83ef89e3c0fa05e589c0a8624098b"
+project_hash = "db0fefaf389f0def6b943a5e7bd2c01aaa610e00"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "60665b326b75db6517939d0e1875850bc4a54368"
@@ -2802,6 +2780,6 @@ version = "1.9.2+0"
 # ╟─fb38f51a-52a1-43cd-9d73-61da5b23fe21
 # ╠═3174df5d-7ebc-4d7d-8516-3a7a4f5f1748
 # ╠═cd220521-e8ed-4430-92d2-c0b32f53139c
-# ╠═98e70294-3e28-464d-8e2d-59585ee86bc4
+# ╠═b1573e01-3920-423a-a201-3d489ce3d77e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

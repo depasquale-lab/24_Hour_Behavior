@@ -1,3 +1,5 @@
+export GaussianPriorHMM, NormalInverseGamma, Priors
+
 struct NormalInverseGamma{T}
     μ0::T    # prior mean
     κ0::T    # mean precision scaling
