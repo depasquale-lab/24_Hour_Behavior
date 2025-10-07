@@ -1,63 +1,44 @@
-# ------------------------ SETUP ------------------------
+# ============================ SETUP ============================
 library(mgcv)
 library(nlme)
-library(readr)      # fast I/O; reads .gz directly
+library(readr)
 library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(tidyr)
 library(stringr)
 
-# ------------------------ CONFIG ------------------------
-# Rig timezone (change if needed)
+# ============================ CONFIG ============================
 TZ_USE <- "America/New_York"
-
-# Lights-on offset in hours (shift so lights-on = 0)
 LIGHTS_ON_SHIFT_H <- 7.5
-
-# Population smooth basis size (modest; increase a bit if clearly underfitting)
 K_HOUR <- 16
 
-# ------------------------ LOAD & PREP ------------------------
-# read_csv auto-detects gzip; set col types if you want strictness
+# ============================ LOAD & PREP ============================
 whole_df <- read_csv(
   "../data/processed_rat_data.csv.gz",
-  show_col_types = FALSE,
-  progress = FALSE,
+  show_col_types = FALSE, progress = FALSE,
   na = c("", "NA", "NaN", "null")
 )
 
-# --- Keep only 24-hour sessions, drop 2-hour sessions ---
-# Normalize 'daily' and detect 24h values robustly
+# keep 24h sessions only
 whole_df <- whole_df %>%
   mutate(
     daily_chr = tolower(trimws(as.character(daily))),
-    # flag as 24h if textual match OR numeric 24
-    is_24h = daily_chr %in% c("24", "24h", "24hr", "24-hr", "24 hrs", "24 hours", "24 hour", "24 hr") |
+    is_24h = daily_chr %in% c("24","24h","24hr","24-hr","24 hrs","24 hours","24 hour","24 hr") |
              suppressWarnings(!is.na(as.numeric(daily_chr)) & as.numeric(daily_chr) == 24)
   ) %>%
   filter(is_24h)
 
-# (Optional) sanity check: which animals remain
-kept_animals <- whole_df %>% distinct(name) %>% arrange(name)
 message("Kept animals (24h sessions only):")
-print(kept_animals)
+print(whole_df %>% distinct(name) %>% arrange(name))
 
-# Robust datetime parse:
-# - Accepts "YYYY-mm-dd HH:MM:SS" or "YYYY-mm-dd HH:MM"
-# - If your file includes timezone offsets, readr will parse them; otherwise we set TZ.
+# robust-ish datetime parse into desired TZ
 parse_dt <- function(x) {
-  # Trim stray whitespace
   x <- str_trim(x)
-  # Try two common orders; add more if you see parsing failures
-  dt <- parse_date_time(x, orders = c("Y-m-d H:M:S", "Y-m-d H:M"), tz = TZ_USE, quiet = TRUE)
-  dt
+  parse_date_time(x, orders = c("Y-m-d H:M:S", "Y-m-d H:M"), tz = TZ_USE, quiet = TRUE)
 }
+whole_df <- whole_df %>% mutate(trial_datetime = parse_dt(trial_datetime))
 
-whole_df <- whole_df %>%
-  mutate(trial_datetime = parse_dt(trial_datetime))
-
-# Show a quick sample of any unparsed timestamps
 bad_idx <- which(is.na(whole_df$trial_datetime))
 if (length(bad_idx) > 0) {
   message("WARNING: Some timestamps failed to parse. Examples (up to 10):")
@@ -68,410 +49,428 @@ df <- whole_df %>%
   select(name, correct, trial_datetime, rt) %>%
   mutate(
     name = factor(name),
-    # Ensure binomial 0/1 numeric. If 'correct' is logical or "TRUE"/"FALSE", adjust here:
-    correct = as.integer(correct),
-    # Decimal hour-of-day (0..24)
-    hour_of_day = hour(trial_datetime) + minute(trial_datetime) / 60 + second(trial_datetime) / 3600,
-    # Hours from lights-on, continuous on [0,24)
+    correct = as.integer(as.logical(correct)),  # force to {0,1}
+    hour_of_day = hour(trial_datetime) + minute(trial_datetime)/60 + second(trial_datetime)/3600,
     hour_cont   = (hour_of_day - LIGHTS_ON_SHIFT_H) %% 24,
-    # Optional half-hour bin for summaries (kept for convenience)
     hour_0p5    = (floor(hour_of_day * 2) / 2 - LIGHTS_ON_SHIFT_H) %% 24,
-    # RT bins if/when you need them later
     rt_bin      = round(rt / 0.1)  * 0.1,
     rt_bin_025  = round(rt / 0.25) * 0.25
   ) %>%
-  # Drop unusable rows
-  filter(!is.na(name), !is.na(correct), !is.na(hour_cont))
+  filter(!is.na(name), !is.na(correct), !is.na(hour_cont), !is.na(rt))
 
-# ------------------------ MODEL: ACCURACY ~ TIME OF DAY (trial-level) ------------------------
-K_POP <- 16   # population smooth df (try 16–20)
-K_FS  <- 8    # per-animal deviation df (try 6–10)
+# ============================ MODELS ============================
+# ---- ACCURACY (binomial) ----
+K_POP <- 20  # population k
+K_FS  <- 8   # per-animal deviation k
 
 m_acc_hour <- bam(
   correct ~
-    s(hour_cont, bs = "cc", k = K_POP) +             # population cyclic smooth
-    s(name, bs = "re") +                             # random intercepts
-    s(hour_cont, name, bs = "fs", k = K_FS,          # per-animal cyclic deviations
-      m = 1, xt = list(bs = "cc")),
+    s(hour_cont, bs = "cc", k = K_POP) +
+    s(name, bs = "re") +
+    s(hour_cont, name, bs = "fs", k = K_FS, m = 1, xt = list(bs = "cc")),
   family   = binomial("logit"),
   data     = df,
   method   = "fREML",
   discrete = TRUE,
-  knots    = list(hour_cont = c(0, 24)),             # REQUIRED for cyclic
-  gamma    = 1.3,
-  select   = TRUE
+  knots    = list(hour_cont = c(0, 24)),
+  gamma    = 1.3, select = TRUE
 )
-
 print(logLik(m_acc_hour))
 
-# ------------------------ POPULATION PREDICTIONS (exclude RE + per-animal deviations) ------------------------
-grid_hour <- tibble(
-  hour_cont = seq(0, 24, by = 0.05),
-  name      = levels(df$name)[1]   # dummy level
+# ---- RT (Gamma with log link, response = seconds) ----
+K_POP_RT <- 16
+K_FS_RT  <- 8
+m_rt_hour <- bam(
+  rt ~ s(hour_cont, bs="cc", k=K_POP_RT) +
+       s(name, bs="re") +
+       s(hour_cont, name, bs="fs", k=K_FS_RT, m=1, xt=list(bs="cc")),
+  family = Gamma(link="log"),
+  data   = df, method="fREML", discrete=TRUE,
+  knots  = list(hour_cont=c(0,24)), gamma=1.3, select=TRUE
 )
+print(logLik(m_rt_hour))
 
-pred <- predict(
-  m_acc_hour,
-  newdata = grid_hour,
-  type    = "link",
-  se.fit  = TRUE,
-  exclude = c("s(name)", "s(hour_cont,name)")
-)
+# ---- TRIAL PRODUCTION (NB with offset; 10-min bins default) ----
+USE_AR <- FALSE
+RHO    <- 0.3
+K_POP_P <- 16
+K_FS_P  <- 8
+BW_HOURS <- 1/6
+bw_hours <- BW_HOURS
 
-pop_curve <- grid_hour %>%
-  mutate(
-    fit   = plogis(pred$fit),
-    upper = plogis(pred$fit + 1.96 * pred$se.fit),
-    lower = plogis(pred$fit - 1.96 * pred$se.fit)
-)
+# bin edges
+bin_seq <- seq(0, 24 - bw_hours, by = bw_hours)
 
-# ------------------------ RAW WEIGHTED SUMMARY (DOTS & BARS) ------------------------
-# Pool across all animals within each *integer* hour bin.
-# This weights by the number of trials (busy hours get larger dots and tighter SE).
-raw_summary <- df %>%
-  mutate(hour_bin = floor(hour_cont)) %>%
-  group_by(hour_bin) %>%
-  summarise(
-    n_trials    = n(),
-    p_hat       = mean(correct),
-    # Binomial SE for pooled trials
-    se          = sqrt(p_hat * (1 - p_hat) / n_trials),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    # Midpoint for plotting (center of the integer bin)
-    hour_mid = hour_bin + 0.5
-  )
-
-# ------------------------ PLOT ------------------------
-p_acc_vs_tod <- ggplot() +
-  # Background shading (edit ranges as you like)
-  annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
-           fill = "lightgrey", alpha = 0.3) +
-  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
-           fill = "paleturquoise3", alpha = 0.2) +
-
-  # Population curve (smooth + 95% band)
-  geom_ribbon(
-    data = pop_curve,
-    aes(x = hour_cont, ymin = lower, ymax = upper),
-    fill = "royalblue3", alpha = 0.2
-  ) +
-  geom_line(
-    data = pop_curve,
-    aes(x = hour_cont, y = fit),
-    color = "royalblue3", linewidth = 1
-  ) +
-
-  # Weighted raw dots and binomial SE bars (size ~ # trials)
-  geom_linerange(
-    data = raw_summary,
-    aes(x = hour_mid, ymin = p_hat - se, ymax = p_hat + se),
-    color = "black", linewidth = 0.4
-  ) +
-  geom_point(
-    data = raw_summary,
-    aes(x = hour_mid, y = p_hat, size = n_trials),
-    color = "black", alpha = 0.8
-  ) +
-
-  scale_size_continuous(name = "trials in bin", range = c(1, 5)) +
-  scale_x_continuous(breaks = seq(0, 24, by = 2), limits = c(0, 24)) +
-  labs(x = "hours from light onset", y = "accuracy") +
-  theme_minimal() +
-  theme(
-    axis.title.x = element_text(size = 22),
-    axis.text.x  = element_text(size = 20),
-    axis.title.y = element_text(size = 22),
-    axis.text.y  = element_text(size = 20),
-    legend.position = "right"
-  )
-
-print(p_acc_vs_tod)
-# ggsave("flashes_acc_vs_tod_weighted.pdf", p_acc_vs_tod, width = 8, height = 6)
-
-# ------------------------ OPTIONAL: FACETS BY ANIMAL (population overlay + per-animal dots) ------------------------
-# Per-animal raw summaries (integer hour bins), to visualize who contributed where
-
-grid_by_animal <- tidyr::expand_grid(
-  name      = levels(df$name),
-  hour_cont = seq(0, 24, by = 0.05)
-)
-
-pr_an <- predict(m_acc_hour, newdata = grid_by_animal, type = "response", se.fit = FALSE)
-per_animal_curve <- dplyr::mutate(grid_by_animal, fit = pr_an)
-
-raw_by_animal <- df %>%
-  mutate(hour_bin = floor(hour_cont)) %>%
-  group_by(name, hour_bin) %>%
-  summarise(
-    n_trials = n(),
-    p_hat    = mean(correct),
-    se       = sqrt(p_hat * (1 - p_hat) / n_trials),
-    .groups  = "drop"
-  ) %>%
-  mutate(hour_mid = hour_bin + 0.5)
-
-p_facets <- ggplot() +
-  annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
-           fill = "lightgrey", alpha = 0.3) +
-  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
-           fill = "paleturquoise3", alpha = 0.2) +
-
-  geom_line(
-    data = per_animal_curve,
-    aes(x = hour_cont, y = fit),
-    linewidth = 0.8,
-    color = "black",
-    alpha = 0.7
-  ) +
-
-  # Per-animal raw dots sized by bin trials
-  geom_linerange(
-    data = raw_by_animal,
-    aes(x = hour_mid, ymin = p_hat - se, ymax = p_hat + se),
-    color = "black", linewidth = 0.3
-  ) +
-  geom_point(
-    data = raw_by_animal,
-    aes(x = hour_mid, y = p_hat, size = n_trials),
-    alpha = 0.8
-  ) +
-
-  facet_wrap(~ name, ncol = 4, scales = "fixed") +
-  scale_size_continuous(name = "trials in bin", range = c(0.8, 3.5)) +
-  scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
-  coord_cartesian(ylim = c(0.6, 0.9)) +      # <-- restrict y-axis
-  labs(
-    title = "Flashes: accuracy by time of day (per animal)",
-    x = "hours from light onset",
-    y = "accuracy"
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    strip.text      = element_text(face = "bold", size = 10),
-    plot.title      = element_text(size = 16, face = "bold"),
-    axis.text       = element_text(size = 8),
-    axis.title      = element_text(size = 10),
-    legend.position = "right"
-  )
-
-
-# print(p_facets)
-# ggsave("flashes_acc_vs_tod_by_animal_weighted.pdf", p_facets, width = 11, height = 8.5)
-
-# ======================== RT ~ TIME OF DAY (trial-level) ========================
-# ====================== TOGGLES & CONSTANTS ======================
-USE_AR   <- TRUE          # turn AR(1) on/off
-RHO      <- 0.3           # 0.2–0.6 typical
-K_POP    <- 16            # population smooth k
-K_FS     <- 8             # per-animal deviation k
-
-BW_HOURS <- 1/6           # 10 min bins for counts
-
-# ====================== TRIAL-LEVEL DF WITH AR STARTS ======================
-df_trial <- df %>%
-  mutate(session = as.factor(as.Date(trial_datetime, tz = TZ_USE))) %>%
-  arrange(name, session, trial_datetime) %>%
-  group_by(name, session) %>%
-  mutate(AR_start = row_number() == 1) %>%
-  ungroup()
-
-# ====================== ACCURACY ~ TIME OF DAY (Binomial) ======================
-m_acc_hour <- mgcv::bam(
-  correct ~
-    s(hour_cont, bs = "cc", k = K_POP) +
-    s(name, bs = "re") +
-    s(hour_cont, name, bs = "fs", k = K_FS, m = 1, xt = list(bs = "cc")) +
-    s(session, bs = "re"),
-  family   = binomial("logit"),
-  data     = df_trial,
-  method   = "fREML",
-  discrete = TRUE,
-  knots    = list(hour_cont = c(0, 24)),
-  gamma    = 1.3,
-  select   = TRUE,
-  rho      = if (USE_AR) RHO else 0,
-  AR.start = if (USE_AR) df_trial$AR_start else NULL
-)
-
-# population curve (exclude RE + fs)
-grid_hour <- tibble::tibble(
-  hour_cont = seq(0, 24, by = 0.05),
-  name      = levels(df_trial$name)[1],
-  session   = df_trial$session[1]
-)
-pr_acc <- predict(
-  m_acc_hour, grid_hour, type = "link", se.fit = TRUE,
-  exclude = c("s(name)", "s(hour_cont,name)", "s(session)")
-)
-pop_curve <- grid_hour %>%
-  mutate(
-    fit   = plogis(pr_acc$fit),
-    lower = plogis(pr_acc$fit - 1.96 * pr_acc$se.fit),
-    upper = plogis(pr_acc$fit + 1.96 * pr_acc$se.fit)
-  )
-
-# ====================== TRIAL PRODUCTION COUNTS (NB) ======================
-# Per animal × day × bin counts; include zero bins so AR is estimable
-bin_seq <- seq(0, 24 - BW_HOURS, by = BW_HOURS)   # left edges: 0 .. 24 - BW
-
+# counts per animal x bin
 counts_raw <- df %>%
   mutate(
-    session  = as.factor(as.Date(trial_datetime, tz = TZ_USE)),
-    hour_bin = floor(hour_cont / BW_HOURS) * BW_HOURS
+    session  = as.Date(trial_datetime, tz = TZ_USE),
+    hour_bin = floor(hour_cont / bw_hours) * bw_hours
   ) %>%
-  group_by(name, session, hour_bin) %>%
-  summarise(n_trials = dplyr::n(), .groups = "drop")
+  group_by(name, hour_bin) %>%
+  summarise(
+    n_trials   = n(),
+    n_sessions = n_distinct(session),
+    .groups = "drop"
+  )
 
+# complete grid + offset(exposure)
 count_df <- tidyr::complete(
   counts_raw,
   name     = levels(df$name),
-  session  = unique(as.factor(as.Date(df$trial_datetime, tz = TZ_USE))),
-  hour_bin = bin_seq,
-  fill     = list(n_trials = 0)
+  hour_bin = seq(0, 24 - bw_hours, by = bw_hours),
+  fill = list(n_trials = 0, n_sessions = 0)
 ) %>%
   mutate(
-    name     = factor(name, levels = levels(df$name)),
-    session  = factor(session),
+    name = factor(name, levels = levels(df$name)),
     hour_bin = as.numeric(hour_bin)
   ) %>%
-  arrange(name, session, hour_bin) %>%
-  group_by(name, session) %>%
-  mutate(AR_start = row_number() == 1) %>%
-  ungroup()
-
-stopifnot(nrow(count_df) > 0, is.factor(count_df$name), is.numeric(count_df$hour_bin))
-
-# NB GAMM with cyclic smooth + per-animal deviations + day RE + optional AR(1)
-m_trials <- mgcv::bam(
-  n_trials ~
-    s(hour_bin, bs = "cc", k = K_POP) +
-    s(name, bs = "re") +
-    s(hour_bin, name, bs = "fs", k = max(4, K_FS - 2), m = 1, xt = list(bs = "cc")) +
-    s(session, bs = "re"),
-  family   = nb(link = "log"),
-  data     = count_df,
-  method   = "fREML",
-  discrete = TRUE,
-  knots    = list(hour_bin = c(0, 24)),
-  gamma    = 1.3,
-  select   = TRUE,
-  rho      = if (USE_AR) RHO else 0,
-  AR.start = if (USE_AR) count_df$AR_start else NULL
-)
-
-# ====================== POPULATION PREDICTIONS (per-animal rate) ======================
-grid_trials <- tibble::tibble(
-  hour_bin = seq(0, 24, by = 0.05),
-  name     = levels(count_df$name)[1],
-  session  = count_df$session[1]
-)
-pr_trials <- predict(
-  m_trials, newdata = grid_trials, type = "link", se.fit = TRUE,
-  exclude = c("s(name)", "s(hour_bin,name)", "s(session)")
-)
-pop_trials <- grid_trials %>%
+  # drop rows with truly zero exposure (no sessions ever contributed to that bin)
+  filter(n_sessions > 0) %>%
   mutate(
-    mu_bin        = exp(pr_trials$fit),                      # expected count per bin per animal
-    rate_per_hour = mu_bin / BW_HOURS,                       # make rate scale
-    rate_lo       = exp(pr_trials$fit - 1.96 * pr_trials$se.fit) / BW_HOURS,
-    rate_hi       = exp(pr_trials$fit + 1.96 * pr_trials$se.fit) / BW_HOURS
-  )
-
-# ====================== RAW DOTS (per-animal rate; same scale as curve) ======================
-# Average across ALL animal×day series present in that hour
-raw_trials_per_animal <- count_df %>%
-  mutate(
-    hour_int = floor(hour_bin),
-    rate     = n_trials / BW_HOURS
+    offset_log_exposure = log(n_sessions * bw_hours)
   ) %>%
+  arrange(name, hour_bin)
+
+stopifnot(nrow(count_df) > 0, is.factor(count_df$name), is.numeric(count_df$hour_bin),
+          all(count_df$hour_bin >= 0 & count_df$hour_bin <= 24))
+
+count_df <- count_df %>% arrange(name, hour_bin) %>%
+  group_by(name) %>% mutate(AR_start = row_number()==1) %>% ungroup()
+
+m_trials <- bam(
+  n_trials ~ offset(offset_log_exposure) +
+             s(hour_bin, bs="cc", k=K_POP_P) +
+             s(name, bs="re") +
+             s(hour_bin, name, bs="fs", k=K_FS_P, m=1, xt=list(bs="cc")),
+  family   = nb(), data = count_df,
+  method   = "fREML", discrete = TRUE,
+  knots    = list(hour_bin = c(0, 24)),
+  rho      = if (USE_AR) RHO else 0,
+  AR.start = if (USE_AR) count_df$AR_start else NULL,
+  gamma    = 1.3, select = TRUE
+)
+print(logLik(m_trials))
+
+# ============================ RAW DOTS (same as before) ============================
+# Accuracy raw summary (pooled trials per integer hour)
+raw_summary <- df %>%
+  mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
+  group_by(name, hour_bin) %>%
+  summarise(p_correct = mean(correct), .groups = "drop") %>%
+  group_by(hour_bin) %>%
+  summarise(
+    n_animals = n(),
+    p_hat = mean(p_correct),
+    se = sd(p_correct) / sqrt(n_animals),
+    .groups = "drop"
+  ) %>%
+  mutate(hour_mid = hour_bin + 0.25)
+
+# RT raw summary (integer hours)
+raw_rt <- df %>%
+  mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
+  group_by(name, hour_bin) %>%
+  summarise(mean_rt = mean(rt, na.rm = TRUE), .groups = "drop") %>%
+  group_by(hour_bin) %>%
+  summarise(
+    n_animals = n(),
+    mean_rt = mean(mean_rt),  # average of animal means
+    se = sd(mean_rt) / sqrt(n_animals),  # SE across animals
+    .groups = "drop"
+  ) %>%
+  mutate(hour_mid = hour_bin + 0.25)
+
+# Trial production: per-hour per-animal dots
+raw_trials_per_animal <- count_df %>%
+  mutate(hour_int = floor(hour_bin)) %>%
   group_by(hour_int) %>%
   summarise(
-    n_series       = dplyr::n(),
-    n_animals      = n_distinct(name),
-    rate_per_animal= mean(rate),                  # average per-animal rate among those present
-    se_rate        = sd(rate)/sqrt(n_series),
+    total_trials = sum(n_trials),
+    n_animals    = n_distinct(name),
+    rate_per_animal = (total_trials / n_animals) / 1.0,
+    se_rate = (sqrt(total_trials) / n_animals) / 1.0,
     .groups = "drop"
   ) %>%
   mutate(hour_mid = hour_int + 0.5)
 
-# ====================== PLOT: population vs per-animal dots ======================
+# ============================ MARGINAL CURVES (avg over animals) ============================
+set.seed(123)
+B <- 300  # bootstrap replicates for ribbons
+animal_ids <- levels(df$name)
+
+# ---- Accuracy ----
+hour_seq <- seq(0, 24, by = 0.05)
+grid_all_acc <- tidyr::expand_grid(name = levels(df$name), hour_cont = hour_seq)
+grid_all_acc$pred <- predict(m_acc_hour, newdata = grid_all_acc, type = "response")
+
+avg_acc <- grid_all_acc %>%
+  group_by(hour_cont) %>%
+  summarise(fit = mean(pred), .groups = "drop")
+
+boot_mat_acc <- replicate(B, {
+  samp <- sample(animal_ids, length(animal_ids), replace = TRUE)
+  grid_all_acc %>% filter(name %in% samp) %>%
+    group_by(hour_cont) %>% summarise(fit = mean(pred), .groups = "drop") %>%
+    pull(fit)
+})
+avg_acc <- avg_acc %>%
+  mutate(lower = apply(boot_mat_acc, 1, quantile, 0.025),
+         upper = apply(boot_mat_acc, 1, quantile, 0.975))
+
+# ---- RT (Gamma/log; predictions on response) ----
+grid_all_rt <- tidyr::expand_grid(name = levels(df$name), hour_cont = hour_seq)
+grid_all_rt$pred <- predict(m_rt_hour, newdata = grid_all_rt, type = "response")
+
+avg_rt <- grid_all_rt %>%
+  group_by(hour_cont) %>%
+  summarise(fit = mean(pred), .groups = "drop")
+
+boot_mat_rt <- replicate(B, {
+  samp <- sample(animal_ids, length(animal_ids), replace = TRUE)
+  grid_all_rt %>% filter(name %in% samp) %>%
+    group_by(hour_cont) %>% summarise(fit = mean(pred), .groups = "drop") %>%
+    pull(fit)
+})
+avg_rt <- avg_rt %>%
+  mutate(lower = apply(boot_mat_rt, 1, quantile, 0.025),
+         upper = apply(boot_mat_rt, 1, quantile, 0.975))
+
+# ---- Trial production (NB + offset) -> per-hour rate ----
+hour_seq_rate <- seq(0, 24, by = 0.05)
+grid_all_trials <- tidyr::expand_grid(
+  name = levels(count_df$name),
+  hour_bin = hour_seq_rate
+) %>%
+  mutate(offset_log_exposure = log(1))  # = 0, means "1 hour window"
+
+# expected count per 1-hour window (includes RE + fs)
+grid_all_trials$mu_bin <- predict(m_trials, newdata = grid_all_trials, type = "response")
+grid_all_trials$rate_per_hour <- grid_all_trials$mu_bin  # Already per hour
+
+avg_trials <- grid_all_trials %>%
+  group_by(hour_bin) %>%
+  summarise(fit = mean(rate_per_hour), .groups = "drop")
+
+boot_mat_tr <- replicate(B, {
+  samp <- sample(levels(count_df$name), length(levels(count_df$name)), replace = TRUE)
+  grid_all_trials %>% filter(name %in% samp) %>%
+    group_by(hour_bin) %>% summarise(fit = mean(rate_per_hour), .groups = "drop") %>%
+    pull(fit)
+})
+avg_trials <- avg_trials %>%
+  mutate(lower = apply(boot_mat_tr, 1, quantile, 0.025),
+         upper = apply(boot_mat_tr, 1, quantile, 0.975))
+
+# ============================ PLOTS ============================
+# ---- Accuracy ----
+p_acc_vs_tod <- ggplot() +
+  annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
+           fill = "grey90", alpha = 0.5) +
+  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
+           fill = "lightyellow", alpha = 0.8) +
+  geom_ribbon(data = avg_acc, aes(x = hour_cont, ymin = lower, ymax = upper),
+              fill = "royalblue3", alpha = 0.2) +
+  geom_line(data = avg_acc, aes(x = hour_cont, y = fit),
+            color = "royalblue3", linewidth = 1.2) +
+  geom_point(data = raw_summary,
+             aes(x = hour_mid, y = p_hat),
+             color = "black", alpha = 0.8, size = 2) +
+  scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
+  labs(x = "Time from lights on (h)", 
+       y = "Accuracy (proportion correct)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 13),
+    panel.grid.minor = element_blank()
+  )
+
+print(p_acc_vs_tod)
+
+# ---- RT ----
+p_rt_vs_tod <- ggplot() +
+  annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
+           fill = "grey90", alpha = 0.5) +
+  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
+           fill = "lightyellow", alpha = 0.8) +
+  geom_ribbon(data = avg_rt, aes(x = hour_cont, ymin = lower, ymax = upper),
+              fill = "royalblue3", alpha = 0.2) +
+  geom_line(data = avg_rt, aes(x = hour_cont, y = fit),
+            color = "royalblue3", linewidth = 1.2) +
+  geom_linerange(data = raw_rt,
+                 aes(x = hour_mid, ymin = mean_rt - se, ymax = mean_rt + se),
+                 color = "black", linewidth = 0.5) +
+  geom_point(data = raw_rt,
+             aes(x = hour_mid, y = mean_rt),
+             color = "black", alpha = 0.8, size = 2) +
+  scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
+  labs(x = "Time from lights on (h)", 
+       y = "Reaction time (s)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 13),
+    panel.grid.minor = element_blank()
+  )
+
+print(p_rt_vs_tod)
+
+# ---- Trial production ----
+# 1) per animal × integer hour: sum trials & exposure, then rate
+per_animal_hour <- count_df %>%
+  mutate(hour_int = floor(hour_bin),
+         exposure = n_sessions * bw_hours) %>%
+  group_by(name, hour_int) %>%
+  summarise(
+    trials   = sum(n_trials),
+    exposure = sum(exposure),
+    rate     = trials / exposure,     # trials per hour for that animal & hour
+    .groups = "drop"
+  )
+
+# 2) aggregate across animals for the dots & error bars
+raw_trials_per_animal <- per_animal_hour %>%
+  group_by(hour_int) %>%
+  summarise(
+    n_animals = n(),
+    rate_per_animal = mean(rate),
+    se_rate = sd(rate) / sqrt(n_animals),
+    .groups = "drop"
+  ) %>%
+  mutate(hour_mid = hour_int + 0.5)
+
 p_trials_rate <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
-           fill = "lightgrey", alpha = 0.3) +
+           fill = "grey90", alpha = 0.5) +
   annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
-           fill = "paleturquoise3", alpha = 0.2) +
-  geom_ribbon(
-    data = pop_trials,
-    aes(x = hour_bin, ymin = rate_lo, ymax = rate_hi),
-    alpha = 0.2, fill = "royalblue3"
-  ) +
-  geom_line(
-    data = pop_trials,
-    aes(x = hour_bin, y = rate_per_hour),
-    color = "royalblue3", linewidth = 1
-  ) +
-  geom_linerange(
-    data = raw_trials_per_animal,
-    aes(x = hour_mid, ymin = rate_per_animal - se_rate, ymax = rate_per_animal + se_rate),
-    color = "black", linewidth = 0.3, alpha = 0.8
-  ) +
-  geom_point(
-    data = raw_trials_per_animal,
-    aes(x = hour_mid, y = rate_per_animal, size = n_animals),
-    color = "black", alpha = 0.85
-  ) +
-  scale_size_continuous(name = "# animals contributing", range = c(1, 5)) +
-  scale_x_continuous(breaks = seq(0, 24, by = 2), limits = c(0, 24)) +
-  labs(
-    x = "hours from light onset",
-    y = sprintf("trials per hour per animal (bin = %.3f h)", BW_HOURS)
-  ) +
-  theme_minimal()
+           fill = "lightyellow", alpha = 0.8) +
+  geom_ribbon(data = avg_trials,
+              aes(x = hour_bin, ymin = lower, ymax = upper),
+              alpha = 0.2, fill = "royalblue3") +
+  geom_line(data = avg_trials, aes(x = hour_bin, y = fit),
+            color = "royalblue3", linewidth = 1.2) +
+  geom_point(data = raw_trials_per_animal,
+             aes(x = hour_mid, y = rate_per_animal),
+             color = "black", alpha = 0.85, size = 2) +
+  scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
+  labs(x = "Time from lights on (h)", y = "Trial rate (trials/h)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text  = element_text(size = 13),
+    panel.grid.minor = element_blank()
+  )
 
 print(p_trials_rate)
 
-# ====================== FACETS: per-animal production curves ======================
-grid_by_animal_trials <- tidyr::expand_grid(
-  name     = levels(count_df$name),
-  hour_bin = seq(0, 24, by = 0.05),
-  session  = count_df$session[1]        # dummy; excluded when predicting below
-)
-per_animal_trials <- grid_by_animal_trials %>%
+# ggsave("flashes_acc_vs_tod_marginal.pdf", p_acc_vs_tod, width = 8, height = 6)
+# ggsave("flashes_rt_vs_tod_marginal.pdf",  p_rt_vs_tod,  width = 8, height = 6)
+# ggsave("flashes_trials_rate_marginal.pdf", p_trials_rate, width = 8, height = 6)
+
+# ============================ PER-ANIMAL RAW DOTS FOR FACETS ============================
+# Accuracy per animal
+raw_summary_indiv <- df %>%
+  mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
+  group_by(name, hour_bin) %>%
+  summarise(
+    n_trials = n(),
+    p_hat = mean(correct),
+    se = sqrt(p_hat * (1 - p_hat) / n_trials),
+    .groups = "drop"
+  ) %>%
+  mutate(hour_mid = hour_bin + 0.25)
+
+# RT per animal
+raw_rt_indiv <- df %>%
+  mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
+  group_by(name, hour_bin) %>%
+  summarise(
+    n_trials = n(),
+    mean_rt = mean(rt, na.rm = TRUE),
+    se = sd(rt, na.rm = TRUE) / sqrt(n_trials),
+    .groups = "drop"
+  ) %>%
+  mutate(hour_mid = hour_bin + 0.25)
+
+# Trial production per animal (using existing count_df)
+raw_trials_indiv <- count_df %>%
   mutate(
-    rate_per_hour = exp(predict(m_trials, newdata = cur_data_all(), type = "link")) / BW_HOURS
-  )
+    hour_int = floor(hour_bin),
+    exposure = n_sessions * bw_hours          # total hours observed for this row
+  ) %>%
+  group_by(name, hour_int) %>%
+  summarise(
+    total_trials    = sum(n_trials),
+    total_exposure  = sum(exposure),
+    rate_per_animal = ifelse(total_exposure > 0, total_trials / total_exposure, NA_real_),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(rate_per_animal)) %>%
+  mutate(hour_mid = hour_int + 0.5)
+# ============================ INDIVIDUAL ANIMAL FACETS WITH DOTS ============================
 
-raw_trials_by_animal <- count_df %>%
-  mutate(hour_mid = hour_bin + BW_HOURS/2,
-         rate_per_hour = n_trials / BW_HOURS)
+# Accuracy by animal
+pred_acc_indiv <- grid_all_acc %>%
+  mutate(name = factor(name, levels = levels(df$name)))
 
-p_trials_facets <- ggplot() +
+p_acc_facet <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
            fill = "lightgrey", alpha = 0.3) +
-  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
-           fill = "paleturquoise3", alpha = 0.2) +
-  geom_line(
-    data = per_animal_trials,
-    aes(x = hour_bin, y = rate_per_hour),
-    linewidth = 0.8, color = "black", alpha = 0.75
-  ) +
-  geom_point(
-    data = raw_trials_by_animal,
-    aes(x = hour_mid, y = rate_per_hour),
-    size = 0.7, alpha = 0.7
-  ) +
-  facet_wrap(~ name, ncol = 4, scales = "fixed") +
-  scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
-  labs(
-    title = "Flashes: trial production rate by time of day (per animal)",
-    x = "hours from light onset",
-    y = "trials per hour"
-  ) +
-  theme_minimal(base_size = 12)
+  geom_point(data = raw_summary_indiv,
+             aes(x = hour_mid, y = p_hat, size = n_trials),
+             color = "black", alpha = 0.5) +
+  geom_line(data = pred_acc_indiv, aes(x = hour_cont, y = pred),
+            color = "royalblue3", linewidth = 0.8) +
+  facet_wrap(~ name, ncol = 4) +
+  scale_size_continuous(name = "trials", range = c(0.5, 3)) +
+  scale_x_continuous(breaks = c(0, 12, 24)) +
+  labs(x = "hours from light onset", y = "accuracy") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 8))
 
-print(p_trials_facets)
+# RT by animal
+pred_rt_indiv <- grid_all_rt %>%
+  mutate(name = factor(name, levels = levels(df$name)))
 
+p_rt_facet <- ggplot() +
+  annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
+           fill = "lightgrey", alpha = 0.3) +
+  geom_point(data = raw_rt_indiv,
+             aes(x = hour_mid, y = mean_rt, size = n_trials),
+             color = "black", alpha = 0.5) +
+  geom_line(data = pred_rt_indiv, aes(x = hour_cont, y = pred),
+            color = "royalblue3", linewidth = 0.8) +
+  facet_wrap(~ name, ncol = 4) +
+  scale_size_continuous(name = "trials", range = c(0.5, 3)) +
+  scale_x_continuous(breaks = c(0, 12, 24)) +
+  labs(x = "hours from light onset", y = "RT (s)") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 8))
 
+# Trial production by animal
+pred_trials_indiv <- grid_all_trials %>%
+  mutate(name = factor(name, levels = levels(count_df$name)))
 
+p_trials_facet <- ggplot() +
+  annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
+           fill = "lightgrey", alpha = 0.3) +
+  geom_point(data = raw_trials_indiv,
+             aes(x = hour_mid, y = rate_per_animal, size = total_exposure),
+             color = "black", alpha = 0.5) +
+  geom_line(data = pred_trials_indiv, aes(x = hour_bin, y = rate_per_hour),
+            color = "royalblue3", linewidth = 0.8) +
+  facet_wrap(~ name, ncol = 4) +
+  scale_size_continuous(name = "exposure (h)", range = c(0.5, 3)) +
+  scale_x_continuous(breaks = c(0, 12, 24)) +
+  labs(x = "hours from light onset", y = "trials/hour") +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 8))
+
+print(p_acc_facet)
+print(p_rt_facet)
+print(p_trials_facet)
+
+# ggsave("flashes_acc_facet.pdf", p_acc_facet, width = 12, height = 10)
+# ggsave("flashes_rt_facet.pdf", p_rt_facet, width = 12, height = 10)
+# ggsave("flashes_trials_facet.pdf", p_trials_facet, width = 12, height = 10)
