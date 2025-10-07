@@ -101,16 +101,18 @@ end
 
 # ╔═╡ ec91d983-f18d-4a38-bdf1-eef871103efe
 begin
-	init_trans = [0.95 0.025 0.025;
-				  0.025 0.95 0.025;
-				  0.025 0.025 0.95]
+	init_trans = [0.97 0.01 0.01 0.01;
+				  0.01 0.97 0.01 0.01;
+				  0.01 0.01 0.97 0.01;
+				  0.01 0.01 0.01 0.97]
 
-	init_dist = [1/3, 1/3, 1/3]
+	init_dist = [1/4, 1/4, 1/4, 1/4]
 
 	init_ddms = [
 		DriftDiffusionModel(1.5, 1.0, 0.5, 0.1),
 		DriftDiffusionModel(1.0, 0.8, 0.5, 0.1),
 		DriftDiffusionModel(1.0, 0.5, 0.5, 0.1),
+		DriftDiffusionModel(1.0, 0.9, 0.5, 0.1)
 	]
 
 	hmm_init = PriorHMM(init_dist, init_trans, init_ddms, 1, 1)
@@ -119,8 +121,11 @@ end
 # ╔═╡ 29480393-017e-414c-8e4e-8a2d82dc8e2a
 hmm_est, lls = baum_welch(hmm_init, all_results; seq_ends=seq_ends, max_iterations=15)
 
+# ╔═╡ e3adb99f-67a5-4258-95c7-0ec4185e2dee
+plot(lls)
+
 # ╔═╡ 89abfa4f-369c-403f-97ed-5eecf3d0865c
-state, sim_data = rand(hmm_est, 4000)
+state, sim_data = rand(hmm_est, 20000)
 
 # ╔═╡ 9036d7cb-a54d-4d61-bbd4-03850b801456
 begin
@@ -2687,6 +2692,7 @@ version = "1.9.2+0"
 # ╠═f370fca1-db94-4d34-b962-a9ec120a571a
 # ╠═ec91d983-f18d-4a38-bdf1-eef871103efe
 # ╠═29480393-017e-414c-8e4e-8a2d82dc8e2a
+# ╠═e3adb99f-67a5-4258-95c7-0ec4185e2dee
 # ╠═89abfa4f-369c-403f-97ed-5eecf3d0865c
 # ╠═9036d7cb-a54d-4d61-bbd4-03850b801456
 # ╟─00000000-0000-0000-0000-000000000001
