@@ -417,12 +417,14 @@ pred_acc_indiv <- grid_all_acc %>%
 p_acc_facet <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
            fill = "lightgrey", alpha = 0.3) +
+  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
+           fill = "lightyellow", alpha = 0.8) +
   geom_point(data = raw_summary_indiv,
              aes(x = hour_mid, y = p_hat, size = n_trials),
              color = "black", alpha = 0.5) +
   geom_line(data = pred_acc_indiv, aes(x = hour_cont, y = pred),
             color = "royalblue3", linewidth = 0.8) +
-  facet_wrap(~ name, ncol = 4) +
+  facet_wrap(~ name, ncol = 4, scales = "free_y") +
   scale_size_continuous(name = "trials", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "accuracy") +
@@ -436,12 +438,14 @@ pred_rt_indiv <- grid_all_rt %>%
 p_rt_facet <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
            fill = "lightgrey", alpha = 0.3) +
+  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
+           fill = "lightyellow", alpha = 0.8) +
   geom_point(data = raw_rt_indiv,
              aes(x = hour_mid, y = mean_rt, size = n_trials),
              color = "black", alpha = 0.5) +
   geom_line(data = pred_rt_indiv, aes(x = hour_cont, y = pred),
             color = "royalblue3", linewidth = 0.8) +
-  facet_wrap(~ name, ncol = 4) +
+  facet_wrap(~ name, ncol = 4, scales = "free_y") +
   scale_size_continuous(name = "trials", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "RT (s)") +
@@ -455,12 +459,14 @@ pred_trials_indiv <- grid_all_trials %>%
 p_trials_facet <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
            fill = "lightgrey", alpha = 0.3) +
+  annotate("rect", xmin = 6.5, xmax = 8.5, ymin = -Inf, ymax = Inf,
+           fill = "lightyellow", alpha = 0.8) +
   geom_point(data = raw_trials_indiv,
              aes(x = hour_mid, y = rate_per_animal, size = total_exposure),
              color = "black", alpha = 0.5) +
   geom_line(data = pred_trials_indiv, aes(x = hour_bin, y = rate_per_hour),
             color = "royalblue3", linewidth = 0.8) +
-  facet_wrap(~ name, ncol = 4) +
+  facet_wrap(~ name, ncol = 4, scales = "free_y") +
   scale_size_continuous(name = "exposure (h)", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "trials/hour") +
