@@ -4,6 +4,7 @@ using Turing
 using Bijectors
 using Distributions
 using HiddenMarkovModels
+using FastGaussQuadrature
 using StatsFuns
 using Base: @kwdef
 using Base.Threads

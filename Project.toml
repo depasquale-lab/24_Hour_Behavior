@@ -9,6 +9,7 @@ Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DriftDiffusionModels = "fd42b4bb-98ff-4b36-9e51-f407bd71120d"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 HiddenMarkovModels = "84ca31d5-effc-45e0-bfda-5a68cd981f47"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
@@ -17,3 +18,4 @@ Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
 
 [compat]
 DensityInterface = "0.4.0"
+FastGaussQuadrature = "1.1.0"

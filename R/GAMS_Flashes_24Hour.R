@@ -152,6 +152,47 @@ m_trials <- bam(
 )
 print(logLik(m_trials))
 
+# Okabe–Ito / "Wong" palette
+julia_colors <- c(
+  "#0072B2", # blue
+  "#D55E00", # vermillion
+  "#009E73", # green
+  "#CC79A7", # purple
+  "#F0E442", # yellow
+  "#56B4E9", # sky
+  "#E69F00", # orange
+  "#000000"  # black
+)
+
+scale_color_julia <- function(...) scale_color_manual(values = julia_colors, ...)
+scale_fill_julia  <- function(...) scale_fill_manual(values  = julia_colors, ...)
+
+theme_julia <- function(base_size = 12, base_family = "sans") {
+  theme_minimal(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      # box frame like Makie/Plots.jl
+      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+      # very light grid; minor off
+      panel.grid.major = element_line(color = "#D9D9D9", linewidth = 0.35),
+      panel.grid.minor = element_blank(),
+      # axis text/labels
+      axis.title = element_text(face = "bold", color = "black"),
+      axis.text  = element_text(color = "black"),
+      # ticks: a bit longer, square caps
+      axis.ticks       = element_line(color = "black", linewidth = 0.6, lineend = "butt"),
+      axis.ticks.length = unit(6, "pt"),
+      # legend with thin border, white fill
+      legend.background = element_rect(fill = "white", color = "black", linewidth = 0.4),
+      legend.key = element_rect(fill = "white", color = NA),
+      legend.position = "top",
+      # facet headers
+      strip.background = element_rect(fill = "#F3F3F3", color = "black", linewidth = 0.4),
+      strip.text = element_text(face = "bold"),
+      # titles
+      plot.title = element_text(face = "bold", size = base_size * 1.2, margin = margin(b = 4))
+    )
+}
+
 # ============================ RAW DOTS (same as before) ============================
 # Accuracy raw summary (pooled trials per integer hour)
 raw_summary <- df %>%
@@ -279,7 +320,7 @@ p_acc_vs_tod <- ggplot() +
   scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
   labs(x = "Time from lights on (h)", 
        y = "Accuracy (proportion correct)") +
-  theme_minimal(base_size = 14) +
+  theme_julia(base_size = 14) +
   theme(
     axis.title = element_text(size = 16, face = "bold"),
     axis.text = element_text(size = 13),
@@ -307,7 +348,7 @@ p_rt_vs_tod <- ggplot() +
   scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
   labs(x = "Time from lights on (h)", 
        y = "Reaction time (s)") +
-  theme_minimal(base_size = 14) +
+  theme_julia(base_size = 14) +
   theme(
     axis.title = element_text(size = 16, face = "bold"),
     axis.text = element_text(size = 13),
@@ -355,7 +396,7 @@ p_trials_rate <- ggplot() +
              color = "black", alpha = 0.85, size = 2) +
   scale_x_continuous(breaks = seq(0, 24, by = 4), limits = c(0, 24)) +
   labs(x = "Time from lights on (h)", y = "Trial rate (trials/h)") +
-  theme_minimal(base_size = 14) +
+  theme_julia(base_size = 14) +
   theme(
     axis.title = element_text(size = 16, face = "bold"),
     axis.text  = element_text(size = 13),
@@ -364,9 +405,9 @@ p_trials_rate <- ggplot() +
 
 print(p_trials_rate)
 
-# ggsave("flashes_acc_vs_tod_marginal.pdf", p_acc_vs_tod, width = 8, height = 6)
-# ggsave("flashes_rt_vs_tod_marginal.pdf",  p_rt_vs_tod,  width = 8, height = 6)
-# ggsave("flashes_trials_rate_marginal.pdf", p_trials_rate, width = 8, height = 6)
+ggsave("flashes_acc_vs_tod_marginal.pdf", p_acc_vs_tod, width = 8, height = 6)
+ggsave("flashes_rt_vs_tod_marginal.pdf",  p_rt_vs_tod,  width = 8, height = 6)
+ggsave("flashes_trials_rate_marginal.pdf", p_trials_rate, width = 8, height = 6)
 
 # ============================ PER-ANIMAL RAW DOTS FOR FACETS ============================
 # Accuracy per animal
@@ -428,7 +469,7 @@ p_acc_facet <- ggplot() +
   scale_size_continuous(name = "trials", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "accuracy") +
-  theme_minimal() +
+  theme_julia() +
   theme(strip.text = element_text(size = 8))
 
 # RT by animal
@@ -470,7 +511,7 @@ p_trials_facet <- ggplot() +
   scale_size_continuous(name = "exposure (h)", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "trials/hour") +
-  theme_minimal() +
+  theme_julia() +
   theme(strip.text = element_text(size = 8))
 
 print(p_acc_facet)
@@ -480,3 +521,218 @@ print(p_trials_facet)
 # ggsave("flashes_acc_facet.pdf", p_acc_facet, width = 12, height = 10)
 # ggsave("flashes_rt_facet.pdf", p_rt_facet, width = 12, height = 10)
 # ggsave("flashes_trials_facet.pdf", p_trials_facet, width = 12, height = 10)
+
+# =========================== VARIABILITY PLOTS =============================================
+# --- Per-day stats per animal ---
+day_stats <- df %>%
+  mutate(session = as.Date(trial_datetime, tz = TZ_USE)) %>%
+  group_by(name, session) %>%
+  summarise(
+    rt_mean   = mean(rt, na.rm = TRUE),
+    acc_mean  = mean(correct, na.rm = TRUE),
+    trials    = n(),
+    .groups   = "drop"
+  )
+
+# --- Summaries across days (center = median; error bars = min..max) ---
+rt_sum <- day_stats %>%
+  group_by(name) %>%
+  summarise(
+    center = median(rt_mean, na.rm = TRUE),
+    min    = min(rt_mean, na.rm = TRUE),
+    max    = max(rt_mean, na.rm = TRUE),
+    n_days = n(),
+    .groups = "drop"
+  )
+
+acc_sum <- day_stats %>%
+  group_by(name) %>%
+  summarise(
+    center = median(acc_mean, na.rm = TRUE),
+    min    = min(acc_mean, na.rm = TRUE),
+    max    = max(acc_mean, na.rm = TRUE),
+    n_days = n(),
+    .groups = "drop"
+  )
+
+trials_sum <- day_stats %>%
+  group_by(name) %>%
+  summarise(
+    center = median(trials, na.rm = TRUE),
+    min    = min(trials, na.rm = TRUE),
+    max    = max(trials, na.rm = TRUE),
+    n_days = n(),
+    .groups = "drop"
+  )
+
+# --- Helper: ranked range plot (Makie/Julia-esque) ---
+make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = FALSE) {
+  ord_df <- sum_df %>%
+    arrange(if (decreasing) dplyr::desc(center) else center) %>%
+    mutate(name_ord = factor(name, levels = name))
+
+  ggplot(ord_df, aes(x = name_ord)) +
+    # range across days
+    geom_linerange(aes(ymin = min, ymax = max),
+                   linewidth = 1.0, color = "black", lineend = "butt") +
+    # central tendency point
+    geom_point(aes(y = center),
+               shape = 21, size = 3.2, stroke = 0.55, fill = fill_col, color = "black") +
+    coord_flip() +
+    labs(x = NULL, y = ylab, title = title) +
+    theme_julia(base_size = 12) +
+    theme(
+      panel.grid.minor = element_blank(),
+      axis.title.y = element_blank()
+    )
+}
+
+# --- Colors from your Okabe–Ito palette ---
+col_rt     <- julia_colors[1]  # blue
+col_acc    <- julia_colors[3]  # green
+col_trials <- julia_colors[7]  # orange
+
+# --- Build the three ranked plots ---
+# RT: ascending (fastest first)
+p_rt_rank <- make_ranked_range_plot(
+  rt_sum,
+  ylab  = "Reaction time (s)",
+  title = "RT — median daily value (point) with range across days (bar)",
+  fill_col = col_rt,
+  decreasing = TRUE
+)
+
+# Accuracy: descending (best first)
+p_acc_rank <- make_ranked_range_plot(
+  acc_sum,
+  ylab  = "Accuracy (proportion correct)",
+  title = "Accuracy — median daily value with range across days",
+  fill_col = col_acc,
+  decreasing = TRUE
+)
+
+# Trials/day: descending (most productive first)
+p_trials_rank <- make_ranked_range_plot(
+  trials_sum,
+  ylab  = "Trials per day",
+  title = "Trials/day — median with range across days",
+  fill_col = col_trials,
+  decreasing = TRUE
+)
+
+# --- Show them ---
+print(p_rt_rank)
+print(p_acc_rank)
+print(p_trials_rank)
+
+# ggsave("ranked_rt.svg",     p_rt_rank,     width = 7.5, height = 6.0)
+# ggsave("ranked_acc.svg",    p_acc_rank,    width = 7.5, height = 6.0)
+# ggsave("ranked_trials.svg", p_trials_rank, width = 7.5, height = 6.0)
+
+MIN_TRIALS_PER_HOUR <- 200   # set to 0 to keep all hours
+
+# ---- 1) Build per-session, per-hour stats (one row per name × session × hour)
+hourly_base <- df %>%
+  mutate(
+    session  = as.Date(trial_datetime, tz = TZ_USE),
+    hour_int = floor(hour_cont)                    # 0..23
+  ) %>%
+  group_by(name, session, hour_int) %>%
+  summarise(
+    n_trials = n(),
+    acc_hour = mean(correct),                      # accuracy within that session-hour
+    rt_hour  = mean(rt, na.rm = TRUE),             # mean RT within that session-hour
+    .groups  = "drop"
+  )
+
+# ---- 2) Collapse across sessions to get per-animal, per-hour metrics
+# Weighted by trials per session-hour (so fuller hours count more).
+hourly_by_hour <- hourly_base %>%
+  group_by(name, hour_int) %>%
+  summarise(
+    n_sessions = n(),                              # sessions that contributed to this hour
+    total_trials = sum(n_trials),
+    acc_hour  = stats::weighted.mean(acc_hour, w = n_trials, na.rm = TRUE),
+    rt_hour   = stats::weighted.mean(rt_hour,  w = n_trials, na.rm = TRUE),
+    rate_hour = total_trials / n_sessions,         # avg trials per session for this hour
+    .groups   = "drop"
+  ) %>%
+  filter(total_trials >= MIN_TRIALS_PER_HOUR)      # optional sparsity filter
+
+# ---- 3) Summaries across HOURS per animal: median (point) + min..max (bar)
+summarize_hourly <- function(df, var) {
+  df %>%
+    group_by(name) %>%
+    summarise(
+      center  = median({{var}}, na.rm = TRUE),
+      min     = min({{var}},    na.rm = TRUE),
+      max     = max({{var}},    na.rm = TRUE),
+      n_hours = sum(!is.na({{var}})),
+      .groups = "drop"
+    )
+}
+
+rt_hour_sum     <- summarize_hourly(hourly_by_hour, rt_hour)
+acc_hour_sum    <- summarize_hourly(hourly_by_hour, acc_hour)
+trials_hour_sum <- summarize_hourly(hourly_by_hour, rate_hour)
+
+# ---- 4) Generic ranked plot helper (Julia/Makie-ish)
+make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = TRUE) {
+  ord_df <- sum_df %>%
+    arrange(if (decreasing) dplyr::desc(center) else center) %>%
+    mutate(name_ord = factor(name, levels = name))
+
+  ggplot(ord_df, aes(x = name_ord)) +
+    geom_linerange(aes(ymin = min, ymax = max),
+                   linewidth = 1.0, color = "black", lineend = "butt") +
+    geom_point(aes(y = center),
+               shape = 21, size = 3.2, stroke = 0.55, fill = fill_col, color = "black") +
+    coord_flip() +
+    labs(x = NULL, y = ylab, title = title) +
+    theme_julia(base_size = 12) +
+    theme(panel.grid.minor = element_blank(),
+          axis.title.y = element_blank())
+}
+
+# ---- 5) Colors from your Okabe–Ito palette
+col_rt     <- julia_colors[1]  # blue
+col_acc    <- julia_colors[3]  # green
+col_trials <- julia_colors[7]  # orange
+
+# ---- 6) Build the three ranked plots
+# Order all three with larger center at the top (your current preference)
+p_rt_hour_rank <- make_ranked_range_plot(
+  rt_hour_sum,
+  ylab  = "Reaction time (s) — hour-by-hour",
+  title = paste0("RT (hourly) — median across hours (point) with range (bar)",
+                 if (MIN_TRIALS_PER_HOUR > 0) paste0("  [≥", MIN_TRIALS_PER_HOUR, " trials/hr]") else ""),
+  fill_col  = col_rt,
+  decreasing = TRUE
+)
+
+p_acc_hour_rank <- make_ranked_range_plot(
+  acc_hour_sum,
+  ylab  = "Accuracy — hour-by-hour",
+  title = paste0("Accuracy (hourly) — median across hours with range",
+                 if (MIN_TRIALS_PER_HOUR > 0) paste0("  [≥", MIN_TRIALS_PER_HOUR, " trials/hr]") else ""),
+  fill_col  = col_acc,
+  decreasing = TRUE
+)
+
+p_trials_hour_rank <- make_ranked_range_plot(
+  trials_hour_sum,
+  ylab  = "Trials per hour (avg per session)",
+  title = paste0("Trials/hour (hourly) — median across hours with range",
+                 if (MIN_TRIALS_PER_HOUR > 0) paste0("  [≥", MIN_TRIALS_PER_HOUR, " trials/hr]") else ""),
+  fill_col  = col_trials,
+  decreasing = TRUE
+)
+
+# ---- 7) Show them
+print(p_rt_hour_rank)
+print(p_acc_hour_rank)
+print(p_trials_hour_rank)
+
+ggsave("ranked_rt.svg",     p_rt_rank,     width = 4, height = 6.0)
+ggsave("ranked_acc.svg",    p_acc_rank,    width = 4, height = 6.0)
+ggsave("ranked_trials.svg", p_trials_rank, width = 4, height = 6.0)

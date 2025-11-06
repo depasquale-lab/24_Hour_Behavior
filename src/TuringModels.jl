@@ -4,58 +4,72 @@ export GLMObs, BernoulliGLM, glmhmm, simple_ar_model
 #GLM-HMM model#
 ###############
 struct GLMObs{Tx<:AbstractVector}
-    x::Tx # Covariate Vector
-    y::Int # 0/1
+    x::Tx          # augmented covariate vector (includes intercept at index 1)
+    y::Int         # 0/1
 end
 
-struct BernoulliGLM{Tβ<:AbstractVector, F<:Real} <: Distributions.Distribution{Univariate, Discrete}
-    β₀::F
-    β::Tβ
+# Convenience to augment x with intercept (use when preparing data)
+augment_with_intercept(x::AbstractVector) = vcat(one(eltype(x)), x)
+
+# A Bernoulli GLM whose linear predictor is dot(β, x_aug), where β includes intercept
+struct BernoulliGLM{Tβ<:AbstractVector} <: Distributions.Distribution{Univariate, Discrete}
+    β::Tβ          # includes intercept as β[1]
 end
 
+# Log-likelihood, AD-safe with clamping
 Distributions.logpdf(d::BernoulliGLM, o::GLMObs) = begin
     @assert o.y == 0 || o.y == 1
-    p = logistic(d.β₀ + dot(d.β, o.x))
-    # Use more robust clamping that works with Dual numbers
+    η = dot(d.β, o.x)               # linear predictor (intercept included)
+    p = logistic(η)
     p_safe = clamp(p, eps(typeof(p)), one(typeof(p)) - eps(typeof(p)))
     return o.y == 1 ? log(p_safe) : log1p(-p_safe)
 end
 
-# Remove the Base.zero line completely and add these:
-Base.eltype(::Type{BernoulliGLM{Tβ, F}}) where {Tβ, F} = Int
-Base.length(d::BernoulliGLM) = 1
-Distributions.support(d::BernoulliGLM) = Distributions.RealInterval(0, 1)
+# Minimal interface bits HiddenMarkovModels/Distributions expect
+Base.eltype(::Type{BernoulliGLM{Tβ}}) where {Tβ} = Int
+Base.length(::BernoulliGLM) = 1
+Distributions.support(::BernoulliGLM) = Distributions.RealInterval(0, 1) 
 
+"""
+    glmhmm(data, K)
+
+`data` is a `Vector{Vector{GLMObs}}`, where each `GLMObs.x` is ALREADY augmented
+with a leading 1 (intercept). Number of coefficients per state will be `P1 = length(data[1][1].x)`.
+
+Builds a K-state HMM with Bernoulli-GLM emissions (same β dimension in every state).
+"""
 @model function glmhmm(data::Vector{Vector{GLMObs}}, K::Int)
-    # Just intercept and one slope per state
-    β₀ ~ filldist(Normal(0, 5), K)
-    β₁ ~ filldist(Normal(0, 5), K)
-   
+    # infer dimensionality (already includes intercept)
+    P1 = length(data[1][1].x)
+
+    # Coefficients per state: a matrix of size (P1, K), column k is β_k
+    β = Matrix{Float64}(undef, P1, K)
+    for k in 1:K
+        β[:, k] ~ filldist(Normal(0, 5), P1)
+    end
+
     # Initial state distribution
     π₀ ~ Dirichlet(fill(1.0, K))
-   
-    # Transition matrix - sample each row individually
+
+    # Transition matrix with "sticky" diagonal via α
     α ~ Exponential(1.0)
     Trows = Vector{Vector}(undef, K)
     for k in 1:K
-        a = ones(K) .+ zero(α)   # promote to Vector{Dual or Float64} depending on α
+        a = ones(K) .+ zero(α)  # keep AD-friendly element type
         a[k] += α
         Trows[k] ~ Dirichlet(a)
     end
-    A = copy(hcat(Trows...)')    
-   
-    # Emissions per state
-    emissions = [BernoulliGLM(β₀[k], [β₁[k]]) for k in 1:K]
-   
-    # HMM and likelihood - parallelize the computation
+    A = copy(hcat(Trows...)')
+
+    # Build emissions from columns of β
+    emissions = [BernoulliGLM(view(β, :, k)) for k in 1:K]
+
+    # HMM and likelihood (parallelized across sequences)
     hmm = HMM(π₀, A, emissions)
-    
-    # Compute likelihoods in parallel, then sum
     lls = Vector{typeof(zero(α))}(undef, length(data))
     Threads.@threads for s in eachindex(data)
         lls[s] = HiddenMarkovModels.logdensityof(hmm, data[s])
     end
-    
     @addlogprob! sum(lls)
 end
 
@@ -96,4 +110,21 @@ function simple_ar_model(data::AbstractVector{<:BehaviorTrial}, p::Int)
     end
 
     return ar_regression(y, X)
+end
+
+
+function eDDM(data::AbstractVector{<:BehaviorTrial})
+
+    # default quadrature points and weights
+
+
+    # extract choices, RT, and stimulus direction
+    choices = [d.choice for d in data]
+    RTs = [d.rt for d in data]
+    s = [d.s for d in data]
+
+    # Turing model
+    @model function eddm_model(choices::Vector{Int}, RTs::Vector{Float64}, s::Vector{Int})
+    end
+    return 
 end
