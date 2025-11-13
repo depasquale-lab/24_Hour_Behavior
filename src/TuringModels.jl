@@ -111,20 +111,3 @@ function simple_ar_model(data::AbstractVector{<:BehaviorTrial}, p::Int)
 
     return ar_regression(y, X)
 end
-
-
-function eDDM(data::AbstractVector{<:BehaviorTrial})
-
-    # default quadrature points and weights
-
-
-    # extract choices, RT, and stimulus direction
-    choices = [d.choice for d in data]
-    RTs = [d.rt for d in data]
-    s = [d.s for d in data]
-
-    # Turing model
-    @model function eddm_model(choices::Vector{Int}, RTs::Vector{Float64}, s::Vector{Int})
-    end
-    return 
-end
