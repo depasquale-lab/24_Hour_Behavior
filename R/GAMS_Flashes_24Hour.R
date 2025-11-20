@@ -405,9 +405,9 @@ p_trials_rate <- ggplot() +
 
 print(p_trials_rate)
 
-ggsave("flashes_acc_vs_tod_marginal.pdf", p_acc_vs_tod, width = 8, height = 6)
-ggsave("flashes_rt_vs_tod_marginal.pdf",  p_rt_vs_tod,  width = 8, height = 6)
-ggsave("flashes_trials_rate_marginal.pdf", p_trials_rate, width = 8, height = 6)
+# ggsave("flashes_acc_vs_tod_marginal.pdf", p_acc_vs_tod, width = 8, height = 6)
+# ggsave("flashes_rt_vs_tod_marginal.pdf",  p_rt_vs_tod,  width = 8, height = 6)
+# ggsave("flashes_trials_rate_marginal.pdf", p_trials_rate, width = 8, height = 6)
 
 # ============================ PER-ANIMAL RAW DOTS FOR FACETS ============================
 # Accuracy per animal
@@ -733,6 +733,6 @@ print(p_rt_hour_rank)
 print(p_acc_hour_rank)
 print(p_trials_hour_rank)
 
-ggsave("ranked_rt.svg",     p_rt_rank,     width = 4, height = 6.0)
-ggsave("ranked_acc.svg",    p_acc_rank,    width = 4, height = 6.0)
-ggsave("ranked_trials.svg", p_trials_rank, width = 4, height = 6.0)
+# ggsave("ranked_rt_hour.svg",     p_rt_hour_rank,     width = 4, height = 6.0)
+# ggsave("ranked_acc_hour.svg",    p_acc_hour_rank,    width = 4, height = 6.0)
+# ggsave("ranked_trials_hour.svg", p_trials_hour_rank, width = 4, height = 6.0)
