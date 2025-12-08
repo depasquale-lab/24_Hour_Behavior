@@ -1,4 +1,5 @@
 [deps]
+BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
 BehaviorModels = "a9f1d2d2-4279-4a26-9af5-afc0ddc3b04f"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
@@ -16,4 +17,4 @@ Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
 
 [sources]
 BehaviorModels = {path = ".."}
-DriftDiffusionModels = {path = "/Users/ryansenne/Documents/GitHub/DriftDiffusionModels.jl"}
+DriftDiffusionModels = {path = "\\Users\\senne\\Documents\\GitHub\\DriftDiffusionModels.jl"}
