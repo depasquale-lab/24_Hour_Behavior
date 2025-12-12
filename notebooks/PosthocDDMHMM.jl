@@ -7,6 +7,7 @@ using HiddenMarkovModels
 using DataFrames
 using CSV
 using Dates
+using Printf
 using Statistics
 using StatsPlots
 using StatsBase
@@ -444,3 +445,46 @@ function plot_ddm_params(hmm_est;
 
     return p
 end
+
+# ACFs
+acfs = Vector{Vector{Float64}}(undef, length(results_by_date))
+for i in eachindex(results_by_date)
+    rts = [x.rt for x in results_by_date[i]]
+    acf_vals = autocor(rts, 1:20)
+    acfs[i] = acf_vals
+end
+
+mean_acfs_real = mean(acfs, dims=1)
+
+nsims = 10000
+sim_acfs = Matrix{Float64}(undef, 20, nsims)
+@threads for i in 1:nsims
+    states, data = rand(hmm, 1000)
+    rts = [x.rt for x in data]
+    acf = autocor(rts, 1:20)
+    sim_acfs[:, i] = acf
+end
+
+mean_sim_acfs = mean(sim_acfs, dims=2)
+
+# 94% credible interval across simulations, per lag
+ci_low  = [quantile(x, 0.03) for x in eachrow(sim_acfs)]
+ci_high = [quantile(x, 0.97) for x in eachrow(sim_acfs)]
+
+lags = 1:20
+
+# --- plotting ---
+auto_corr_ppc = plot(
+    lags, mean_sim_acfs;
+    ribbon = (mean_sim_acfs .- ci_low, ci_high .- mean_sim_acfs),
+    label = "PPC mean ± 94% CI",
+    xlabel = "Lag",
+    ylabel = "ACF",
+    fontfamily = "helvetica",
+)
+
+# overlay empirical mean ACF
+plot!(auto_corr_ppc, lags, mean_acfs_real;
+      seriestype = :scatter,
+      marker = :circle,
+      label = "data mean ACF")
