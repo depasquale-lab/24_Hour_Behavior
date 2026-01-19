@@ -15,7 +15,7 @@ K_HOUR <- 16
 
 # ============================ LOAD & PREP ============================
 whole_df <- read_csv(
-  "../data/processed_rat_data.csv.gz",
+  "data/processed_rat_data.csv.gz",
   show_col_types = FALSE, progress = FALSE,
   na = c("", "NA", "NaN", "null")
 )
@@ -469,7 +469,7 @@ p_acc_facet <- ggplot() +
   scale_size_continuous(name = "trials", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "accuracy") +
-  theme_julia() +
+  theme_minimal() +
   theme(strip.text = element_text(size = 8))
 
 # RT by animal
@@ -511,16 +511,16 @@ p_trials_facet <- ggplot() +
   scale_size_continuous(name = "exposure (h)", range = c(0.5, 3)) +
   scale_x_continuous(breaks = c(0, 12, 24)) +
   labs(x = "hours from light onset", y = "trials/hour") +
-  theme_julia() +
+  theme_minimal() +
   theme(strip.text = element_text(size = 8))
 
 print(p_acc_facet)
 print(p_rt_facet)
 print(p_trials_facet)
 
-# ggsave("flashes_acc_facet.pdf", p_acc_facet, width = 12, height = 10)
-# ggsave("flashes_rt_facet.pdf", p_rt_facet, width = 12, height = 10)
-# ggsave("flashes_trials_facet.pdf", p_trials_facet, width = 12, height = 10)
+ggsave("flashes_acc_facet.svg", p_acc_facet, width = 12, height = 10)
+ggsave("flashes_rt_facet.svg", p_rt_facet, width = 12, height = 10)
+ggsave("flashes_trials_facet.svg", p_trials_facet, width = 12, height = 10)
 
 # =========================== VARIABILITY PLOTS =============================================
 # --- Per-day stats per animal ---
@@ -587,7 +587,7 @@ make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = F
     )
 }
 
-# --- Colors from your Okabe–Ito palette ---
+# --- Colors from Okabe–Ito palette ---
 col_rt     <- julia_colors[1]  # blue
 col_acc    <- julia_colors[3]  # green
 col_trials <- julia_colors[7]  # orange
@@ -694,13 +694,13 @@ make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = T
           axis.title.y = element_blank())
 }
 
-# ---- 5) Colors from your Okabe–Ito palette
+# ---- 5) Colors from  Okabe–Ito palette
 col_rt     <- julia_colors[1]  # blue
 col_acc    <- julia_colors[3]  # green
 col_trials <- julia_colors[7]  # orange
 
 # ---- 6) Build the three ranked plots
-# Order all three with larger center at the top (your current preference)
+# Order all three with larger center at the top (current preference)
 p_rt_hour_rank <- make_ranked_range_plot(
   rt_hour_sum,
   ylab  = "Reaction time (s) — hour-by-hour",
