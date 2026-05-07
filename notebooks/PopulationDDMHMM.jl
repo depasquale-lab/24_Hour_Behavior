@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.21
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -485,7 +485,7 @@ end
     β ~ MvNormal(zeros(P), I)
     ϕ ~ Exponential(1.0)
     η = X * β
-    p = clamp.(logistic.(η), 1e-6, 1 - 1e-6)
+    p = clamp.(StatsFuns.logistic.(η), 1e-6, 1 - 1e-6)
     for n in 1:N
         acc[n] ~ Beta(p[n] * ϕ, (1 - p[n]) * ϕ)
     end
@@ -526,7 +526,7 @@ md"""
 acc_pred = let N = length(acc_obs)
     miss = Vector{Union{Missing, Float64}}(missing, N)
     pp   = predict(reg_accuracy(miss, X_design), chain_acc)
-    [mean(pp[Symbol("acc[$n]")]) for n in 1:N]
+    [mean(pp[@varname(acc[n])]) for n in 1:N]
 end
 
 # ╔═╡ dada0030-0000-4000-8000-000000000030
@@ -566,9 +566,10 @@ md"""
 # ╔═╡ dada0033-0000-4000-8000-000000000033
 function beta_forest(chain, param_names::Vector{String}; xlab="β")
     P = length(param_names)
-    n_iter = length(chain)
+    cols = [vec(chain[@varname(β[i])]) for i in 1:P]
+    n_iter = length(cols[1])
     raw = Matrix{Float64}(undef, n_iter, P)
-    for i in 1:P; raw[:, i] = chain[Symbol("β[$i]")]; end
+    for i in 1:P; raw[:, i] = cols[i]; end
 
     summ = DataFrame(
         param = param_names,
@@ -632,7 +633,7 @@ end
 rt_pred = let N = length(rt_obs)
     miss = Vector{Union{Missing, Float64}}(missing, N)
     pp   = predict(reg_rt(miss, X_design), chain_rt)
-    [mean(pp[Symbol("rt[$n]")]) for n in 1:N]
+    [mean(pp[@varname(rt[n])]) for n in 1:N]
 end
 
 # ╔═╡ dada003a-0000-4000-8000-00000000003a
@@ -908,7 +909,11 @@ pairwise paired *t*-tests with Holm correction.
 # ╔═╡ dada0050-0000-4000-8000-000000000050
 begin
     function wide_by_state(df::DataFrame, param::Symbol)
-        w = unstack(df, :rat, :state, param)
+        # Pivot on within-rat accuracy rank, NOT raw :state. Raw state IDs are
+        # arbitrary across rats (the HMM fitter labels states in random order),
+        # so unstacking on :state aligns rats by a meaningless axis and the
+        # condition effect averages to ~0 → spuriously non-significant ANOVA.
+        w = unstack(df, :rat, :state_rank, param)
         sort!(w, :rat)
         w
     end
