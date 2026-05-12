@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.22
 
 using Markdown
 using InteractiveUtils
@@ -37,6 +37,7 @@ begin
     using PlotUtils
     using PlutoUI
     using Random
+    using Serialization
     using Statistics
     using StatsBase
     using StatsFuns
@@ -494,13 +495,17 @@ end
 # ╔═╡ dada0029-0000-4000-8000-000000000029
 # `do`-block-friendly: the function is the first arg, so calls look like
 # `cached_chain("chain_acc") do ... end`.
+#
+# Uses `Serialization` rather than `JLD2` because current Turing returns a
+# `FlexiChain` from `sample()`, and JLD2 can't round-trip that type cleanly.
+# Old `.jld2` caches are ignored; delete `notebooks/cache/*.jld2` if you want.
 function cached_chain(sample_fn::Function, name::String)
-    path = joinpath(CACHE_DIR, name * ".jld2")
+    path = joinpath(CACHE_DIR, name * ".jls")
     if isfile(path)
-        return JLD2.load(path, "chain")
+        return Serialization.deserialize(path)
     end
     chain = sample_fn()
-    JLD2.save(path, "chain", chain)
+    Serialization.serialize(path, chain)
     chain
 end
 
