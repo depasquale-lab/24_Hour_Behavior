@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.22
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ aada0002-0000-4000-8000-000000000002
 begin
@@ -17,6 +29,7 @@ begin
     using DriftDiffusionModels
     using HiddenMarkovModels
     using PlotUtils
+    using PlutoUI
     using Printf
     using Random
     using Statistics
@@ -43,6 +56,7 @@ weighted RT histograms, per-state DDM parameters, and an autocorrelation PPC.
 | 5 | RT histograms |
 | 6 | Per-state parameter plots |
 | 7 | ACF posterior predictive check |
+| 8 | Save figures |
 """
 
 # ╔═╡ aada0003-0000-4000-8000-000000000003
@@ -51,7 +65,7 @@ md"""
 """
 
 # ╔═╡ aada0004-0000-4000-8000-000000000004
-rat = "Remy"
+rat = "1062"
 
 # ╔═╡ aada0006-0000-4000-8000-000000000006
 begin
@@ -237,7 +251,7 @@ end
 state_occupancy_plot = begin
     state_labels = ["S1", "S2", "S3", "S4"]
     hours        = 0:23
-    order        = [2, 1, 3, 4]
+    order        = [4, 2, 3, 1]
 
     p = plot(fontfamily="helvetica")
     groupedbar!(p, hours, occ_soft[:, order] .* 100;
@@ -354,9 +368,9 @@ rt_hist_plot = begin
         idx_incorrect = 2*(s-1) + 2
 
         γs = vec(γ[s, :])
-        Ws = sum(γs)                                # joint state weight (denominator)
+        Ws = sum(γs)                      # joint state weight (denominator)
 
-        # ----- empirical: weights γ/Ws + normalize=:density -> integrals sum to 1 -----
+        # empirical: weights γ/Ws + normalize=:density -> integrals sum to 1 
         rts_c = rts[correct_idx]
         if !isempty(rts_c) && Ws > 0
             histogram!(pA[idx_correct], rts_c;
@@ -381,26 +395,25 @@ rt_hist_plot = begin
                 label     = "")
         end
 
-        # ----- simulated: stephist with per-sample weight 1/N_state -----
+        # simulated: KDE scaled by p(correct|state) / p(incorrect|state)
+        # so ∫sim_correct + ∫sim_incorrect = 1, matching the empirical scheme.
         sim_rts_c = get(simulated_rts[s], "correct",   Float64[])
         sim_rts_i = get(simulated_rts[s], "incorrect", Float64[])
         N_state   = length(sim_rts_c) + length(sim_rts_i)
 
-        if !isempty(sim_rts_c) && N_state > 0
-            stephist!(pA[idx_correct], sim_rts_c;
-                weights   = fill(1 / N_state, length(sim_rts_c)),
-                bins      = edges,
-                normalize = :density,
+        if length(sim_rts_c) > 1 && N_state > 0
+            kc = StatsPlots.KernelDensity.kde(sim_rts_c)
+            p_sim_c = length(sim_rts_c) / N_state
+            plot!(pA[idx_correct], kc.x, kc.density .* p_sim_c;
                 linewidth = 2,
                 color     = :black,
                 label     = s == 1 ? "Sim" : "")
         end
 
-        if !isempty(sim_rts_i) && N_state > 0
-            stephist!(pA[idx_incorrect], sim_rts_i;
-                weights   = fill(1 / N_state, length(sim_rts_i)),
-                bins      = edges,
-                normalize = :density,
+        if length(sim_rts_i) > 1 && N_state > 0
+            ki = StatsPlots.KernelDensity.kde(sim_rts_i)
+            p_sim_i = length(sim_rts_i) / N_state
+            plot!(pA[idx_incorrect], ki.x, ki.density .* p_sim_i;
                 linewidth = 2,
                 color     = :black,
                 label     = "")
@@ -601,6 +614,43 @@ auto_corr_ppc = begin
     acp
 end
 
+# ╔═╡ aada0027-0000-4000-8000-000000000027
+md"""
+## §8 Save figures
+"""
+
+# ╔═╡ aada0028-0000-4000-8000-000000000028
+md"""
+Save all figures to `../results/`: $(@bind save_figs CheckBox(default=false))
+"""
+
+# ╔═╡ aada0029-0000-4000-8000-000000000029
+begin
+    if save_figs
+        results_dir = joinpath(@__DIR__, "..", "results")
+        mkpath(results_dir)
+        rat_tag = lowercase(String(rat))
+        figs = [
+            (posterior_plot_night, "posterior_night"),
+            (posterior_plot_day,   "posterior_day"),
+            (state_occupancy_plot, "state_occupancy"),
+            (rt_hist_plot,         "rt_hist"),
+            (soft_accuracy_plot,   "soft_accuracy"),
+            (ddm_params_plot,      "ddm_params"),
+            (auto_corr_ppc,        "acf_ppc"),
+        ]
+        for (fig, name) in figs
+            savefig(fig, joinpath(results_dir, "posthoc_$(rat_tag)_$(name).svg"))
+        end
+        md"Saved $(length(figs)) figures to `$results_dir`."
+    else
+        md"_Tick the box above to save all figures._"
+    end
+end
+
+# ╔═╡ 98a31a09-62b6-4f47-baa9-c005613f48da
+hmm.trans
+
 # ╔═╡ Cell order:
 # ╟─aada0001-0000-4000-8000-000000000001
 # ╠═aada0002-0000-4000-8000-000000000002
@@ -637,3 +687,7 @@ end
 # ╠═aada0022-0000-4000-8000-000000000022
 # ╠═aada0023-0000-4000-8000-000000000023
 # ╠═aada0024-0000-4000-8000-000000000024
+# ╟─aada0027-0000-4000-8000-000000000027
+# ╟─aada0028-0000-4000-8000-000000000028
+# ╠═aada0029-0000-4000-8000-000000000029
+# ╠═98a31a09-62b6-4f47-baa9-c005613f48da

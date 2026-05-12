@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.24
+# v0.20.22
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ cafe0002-0000-4000-8000-000000000002
 begin
@@ -21,6 +33,7 @@ begin
     using JLD2
     using LinearAlgebra
     using Plots
+    using PlutoUI
     using Printf
     using Random
     using Statistics
@@ -44,6 +57,7 @@ Cross-model alignment between fitted GLM-HMM and DDM-HMM posteriors.
 | 7 | Per-animal alignment figures |
 | 8 | Fraction-of-entropy-explained |
 | 9 | Posterior-only choice prediction |
+| 10 | Save figures |
 """
 
 # ╔═╡ cafe0003-0000-4000-8000-000000000003
@@ -56,6 +70,7 @@ begin
     GLM_GAMMAS_PATH = "/Users/senne/Downloads/best_gammas2.jld2"
     GLM_PARAMS_PATH = "/Users/senne/Downloads/FINAL_fit3.csv"
     DATA_DIR        = joinpath(@__DIR__, "..", "data")
+	DDMS_DIR        = joinpath(@__DIR__, "..", "ddmhmms")
     RAT_DATA_FILE   = joinpath(DATA_DIR, "processed_rat_data.csv.gz")
     nothing
 end
@@ -403,8 +418,7 @@ end
 lift_heatmap = pretty_lift_heatmap(avg_lift; title = "Average lift (n=$n_used)")
 
 # ╔═╡ cafe0018-0000-4000-8000-000000000018
-# Save the heatmap to disk. Comment this out if you don't want to overwrite the file.
-save(joinpath(@__DIR__, "model_comparison_lift_heatmap.eps"), lift_heatmap)
+# (Heatmap saving is handled by the §10 checkbox cell.)
 
 # ╔═╡ cafe0019-0000-4000-8000-000000000019
 md"""
@@ -776,7 +790,7 @@ function group_null_means(per_animal; weighted::Bool = true)
 end
 
 # ╔═╡ cafe002a-0000-4000-8000-00000000002a
-function fig_zscores(per_animal; outfile::String = "zscores_by_animal.png")
+function fig_zscores(per_animal; outfile::String = "")
     d = extract_per_animal(per_animal; sortby = :z)
     n = length(d.z)
     x = 1:n
@@ -795,12 +809,14 @@ function fig_zscores(per_animal; outfile::String = "zscores_by_animal.png")
     ax.xticklabelrotation = pi / 3
     ax.xticklabelalign    = (:right, :center)
 
-    save(outfile, fig, px_per_unit = 2)
+    if !isempty(outfile)
+        save(outfile, fig, px_per_unit = 2)
+    end
     return fig
 end
 
 # ╔═╡ cafe002b-0000-4000-8000-00000000002b
-function fig_logp(per_animal; outfile::String = "logp_by_animal.png")
+function fig_logp(per_animal; outfile::String = "")
     d = extract_per_animal(per_animal; sortby = :p)
     n = length(d.p)
     x = 1:n
@@ -830,12 +846,14 @@ function fig_logp(per_animal; outfile::String = "logp_by_animal.png")
             fontsize = 11)
     end
 
-    save(outfile, fig, px_per_unit = 2)
+    if !isempty(outfile)
+        save(outfile, fig, px_per_unit = 2)
+    end
     return fig
 end
 
 # ╔═╡ cafe002c-0000-4000-8000-00000000002c
-function fig_group_null(per_animal; outfile::String = "group_null_hist.png", weighted::Bool = true)
+function fig_group_null(per_animal; outfile::String = "", weighted::Bool = true)
     g     = group_null_means(per_animal; weighted = weighted)
     nulls = g.null_means
     obs   = g.mean_obs
@@ -862,13 +880,15 @@ function fig_group_null(per_animal; outfile::String = "group_null_hist.png", wei
           0.95 * ymax,
           text = txt, align = (:left, :top), fontsize = 12)
 
-    save(outfile, fig, px_per_unit = 2)
+    if !isempty(outfile)
+        save(outfile, fig, px_per_unit = 2)
+    end
     return fig
 end
 
 # ╔═╡ cafe002d-0000-4000-8000-00000000002d
 function fig_example_null(per_animal, animal_name::AbstractString;
-                          outfile::String = "example_null.png")
+                          outfile::String = "")
     idx = findfirst(r -> string(r.animal_id) == animal_name, per_animal)
     idx === nothing && error("Animal '$animal_name' not found.")
 
@@ -899,29 +919,26 @@ function fig_example_null(per_animal, animal_name::AbstractString;
           0.95 * ymax,
           text = txt, align = (:left, :top), fontsize = 12)
 
-    save(outfile, fig, px_per_unit = 2)
+    if !isempty(outfile)
+        save(outfile, fig, px_per_unit = 2)
+    end
     return fig
 end
 
 # ╔═╡ cafe002e-0000-4000-8000-00000000002e
-zscores_fig = fig_zscores(res[:circular].per_animal;
-    outfile = joinpath(@__DIR__, "zscores_by_animal.eps"))
+zscores_fig = fig_zscores(res[:circular].per_animal)
 
 # ╔═╡ cafe002f-0000-4000-8000-00000000002f
-logp_fig = fig_logp(res[:circular].per_animal;
-    outfile = joinpath(@__DIR__, "logp_by_animal.eps"))
+logp_fig = fig_logp(res[:circular].per_animal)
 
 # ╔═╡ cafe0030-0000-4000-8000-000000000030
-group_null_fig = fig_group_null(res[:circular].per_animal;
-    outfile = joinpath(@__DIR__, "group_null_hist.eps"), weighted = true)
+group_null_fig = fig_group_null(res[:circular].per_animal; weighted = true)
 
 # ╔═╡ cafe0031-0000-4000-8000-000000000031
-example_draco_fig = fig_example_null(res[:circular].per_animal, "Draco";
-    outfile = joinpath(@__DIR__, "null_Draco.eps"))
+example_draco_fig = fig_example_null(res[:circular].per_animal, "Draco")
 
 # ╔═╡ cafe0032-0000-4000-8000-000000000032
-example_1065_fig = fig_example_null(res[:circular].per_animal, "1065";
-    outfile = joinpath(@__DIR__, "null_1065.eps"))
+example_1065_fig = fig_example_null(res[:circular].per_animal, "1065")
 
 # ╔═╡ cafe0033-0000-4000-8000-000000000033
 md"""
@@ -1105,7 +1122,7 @@ end
 
 # ╔═╡ cafe0043-0000-4000-8000-000000000043
 function plot_choice_comparison(rows; use_cv::Bool = true,
-                                outfile_prefix::String = "choice_compare")
+                                outfile_prefix::String = "")
     animals = [r.animal for r in rows]
 
     glm = use_cv ? [r.glm_ll_cv for r in rows] : [r.glm_ll_in for r in rows]
@@ -1129,7 +1146,9 @@ function plot_choice_comparison(rows; use_cv::Bool = true,
     Plots.plot!(p1, [lo, hi], [lo, hi];
         linestyle = :dash, linewidth = 2, label = false)
 
-    Plots.savefig(p1, "$(outfile_prefix)_scatter.svg")
+    if !isempty(outfile_prefix)
+        Plots.savefig(p1, "$(outfile_prefix)_scatter.svg")
+    end
 
     Δ    = ddm .- glm
     ord  = sortperm(Δ)
@@ -1161,7 +1180,9 @@ function plot_choice_comparison(rows; use_cv::Bool = true,
     Plots.annotate!(p2, 1, y_annot,
         Plots.text("mean Δ = $(round(μ, sigdigits=3)) ± $(round(sem, sigdigits=2)) (SEM)", 10, :left))
 
-    Plots.savefig(p2, "$(outfile_prefix)_delta.svg")
+    if !isempty(outfile_prefix)
+        Plots.savefig(p2, "$(outfile_prefix)_delta.svg")
+    end
 
     return p1, p2
 end
@@ -1170,14 +1191,56 @@ end
 choice_rows = compare_models_posterior_choice(unique_animals, best_run; nb = 5)
 
 # ╔═╡ cafe0045-0000-4000-8000-000000000045
-choice_cv_plots = plot_choice_comparison(choice_rows;
-    use_cv = true,
-    outfile_prefix = joinpath(@__DIR__, "choice_cv"))
+choice_cv_plots = plot_choice_comparison(choice_rows; use_cv = true)
 
 # ╔═╡ cafe0046-0000-4000-8000-000000000046
-choice_insample_plots = plot_choice_comparison(choice_rows;
-    use_cv = false,
-    outfile_prefix = joinpath(@__DIR__, "choice_insample"))
+choice_insample_plots = plot_choice_comparison(choice_rows; use_cv = false)
+
+# ╔═╡ cafe0047-0000-4000-8000-000000000047
+md"""
+## §10 Save figures
+"""
+
+# ╔═╡ cafe0048-0000-4000-8000-000000000048
+md"""
+Save all figures to `../results/`: $(@bind save_figs CheckBox(default=false))
+"""
+
+# ╔═╡ cafe0049-0000-4000-8000-000000000049
+begin
+    if save_figs
+        results_dir = joinpath(@__DIR__, "..", "results")
+        mkpath(results_dir)
+
+        # CairoMakie figures
+        makie_figs = [
+            (lift_heatmap,      "model_comparison_lift_heatmap.eps"),
+            (zscores_fig,       "zscores_by_animal.eps"),
+            (logp_fig,          "logp_by_animal.eps"),
+            (group_null_fig,    "group_null_hist.eps"),
+            (example_draco_fig, "null_Draco.eps"),
+            (example_1065_fig,  "null_1065.eps"),
+        ]
+        for (fig, name) in makie_figs
+            save(joinpath(results_dir, name), fig, px_per_unit = 2)
+        end
+
+        # Plots.jl figure tuples (scatter, delta)
+        plots_pairs = [
+            (choice_cv_plots,       "choice_cv"),
+            (choice_insample_plots, "choice_insample"),
+        ]
+        for ((p_scatter, p_delta), prefix) in plots_pairs
+            Plots.savefig(p_scatter, joinpath(results_dir, "$(prefix)_scatter.svg"))
+            Plots.savefig(p_delta,   joinpath(results_dir, "$(prefix)_delta.svg"))
+        end
+
+        n_saved = length(makie_figs) + 2 * length(plots_pairs)
+        md"Saved $n_saved figures to `$results_dir`."
+    else
+        md"_Tick the box above to save all figures._"
+    end
+end
 
 # ╔═╡ Cell order:
 # ╟─cafe0001-0000-4000-8000-000000000001
@@ -1249,3 +1312,6 @@ choice_insample_plots = plot_choice_comparison(choice_rows;
 # ╠═cafe0044-0000-4000-8000-000000000044
 # ╠═cafe0045-0000-4000-8000-000000000045
 # ╠═cafe0046-0000-4000-8000-000000000046
+# ╟─cafe0047-0000-4000-8000-000000000047
+# ╟─cafe0048-0000-4000-8000-000000000048
+# ╠═cafe0049-0000-4000-8000-000000000049

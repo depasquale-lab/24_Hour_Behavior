@@ -1129,7 +1129,7 @@ end
 
 # ╔═╡ dada005d-0000-4000-8000-00000000005d
 md"""
-### Per-rat RT histograms (fixed: was `results[i].real` / `.sim`, the field is `real_rts` / `sim_rts`)
+### Per-rat RT histograms
 """
 
 # ╔═╡ dada005e-0000-4000-8000-00000000005e
