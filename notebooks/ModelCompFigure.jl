@@ -67,11 +67,12 @@ md"""
 
 # ╔═╡ cafe0004-0000-4000-8000-000000000004
 begin
-    GLM_GAMMAS_PATH = "/Users/senne/Downloads/best_gammas2.jld2"
-    GLM_PARAMS_PATH = "/Users/senne/Downloads/FINAL_fit3.csv"
     DATA_DIR        = joinpath(@__DIR__, "..", "data")
 	DDMS_DIR        = joinpath(@__DIR__, "..", "ddmhmms")
+	RESULTS_DIR     = joinpath(@__DIR__, "..", "results")
     RAT_DATA_FILE   = joinpath(DATA_DIR, "processed_rat_data.csv.gz")
+	GLM_GAMMAS_PATH = joinpath(RESULTS_DIR, "best_gammas2.jld2")
+    GLM_PARAMS_PATH = joinpath(RESULTS_DIR, "FINAL_fit3.csv")
     nothing
 end
 
@@ -154,7 +155,7 @@ begin
     end
     DDMHMMFit = Main.DDMHMMFit
 
-    bson_files = filter(f -> occursin("K4", f), readdir(DATA_DIR; join = true))
+    bson_files = filter(f -> occursin("K4", f), readdir(DDMS_DIR; join = true))
 
     ddmhmm_fits = Main.DDMHMMFit[]
     for bson_file in bson_files
@@ -173,6 +174,9 @@ begin
     rat_names = sort(unique(rat_df[!, "name"]))
     nothing
 end
+
+# ╔═╡ aa4f28cf-a990-409a-b6ec-134dfe8fb178
+bson_files
 
 # ╔═╡ cafe000e-0000-4000-8000-00000000000e
 """
@@ -818,18 +822,20 @@ end
 # ╔═╡ cafe002b-0000-4000-8000-00000000002b
 function fig_logp(per_animal; outfile::String = "")
     d = extract_per_animal(per_animal; sortby = :p)
-    n = length(d.p)
+    n = length(d.q)
     x = 1:n
 
+    # Floor q at the smallest representable permutation p so bars don't blow up
+    # when q is exactly 0 (or capped by the permutation resolution).
     nperm = haskey(per_animal[1], :S_perm) ? length(per_animal[1].S_perm) : nothing
-    pmin  = nperm === nothing ? minimum(d.p) : 1 / (nperm + 1)
-    y     = -log10.(max.(d.p, pmin))
+    qmin  = nperm === nothing ? minimum(d.q[d.q .> 0]; init = 1e-12) : 1 / (nperm + 1)
+    y     = -log10.(max.(d.q, qmin))
 
     fig = Figure(size = (1100, 520))
     ax  = Axis(fig[1, 1],
-        title  = "Permutation p-values by animal (sorted by p)",
+        title  = "BH-corrected permutation q-values by animal (sorted by p)",
         xlabel = "Animals (sorted by p)",
-        ylabel = "-log10(p)",
+        ylabel = "-log10(q)  [Benjamini–Hochberg FDR]",
     )
 
     CairoMakie.barplot!(ax, x, y)
@@ -841,7 +847,7 @@ function fig_logp(per_animal; outfile::String = "")
 
     if nperm !== nothing
         CairoMakie.text!(ax, n, y[end] + 0.3,
-            text  = "floor p≈$(round(pmin, sigdigits=2))",
+            text  = "floor q≈$(round(qmin, sigdigits=2))",
             align = (:right, :bottom),
             fontsize = 11)
     end
@@ -1255,6 +1261,7 @@ end
 # ╠═cafe000a-0000-4000-8000-00000000000a
 # ╟─cafe000b-0000-4000-8000-00000000000b
 # ╠═cafe000d-0000-4000-8000-00000000000d
+# ╠═aa4f28cf-a990-409a-b6ec-134dfe8fb178
 # ╠═cafe000e-0000-4000-8000-00000000000e
 # ╠═cafe000f-0000-4000-8000-00000000000f
 # ╟─cafe0010-0000-4000-8000-000000000010

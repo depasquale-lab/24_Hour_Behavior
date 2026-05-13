@@ -985,6 +985,21 @@ anova_table = let
     DataFrame(rows)
 end
 
+# ╔═╡ dada0100-0000-4000-8000-000000000100
+# Partial eta squared from RM-ANOVA F-stats:
+#   η²_p = (F·df1) / (F·df1 + df2)   ⇔   SS_cond / (SS_cond + SS_error)
+# Cohen's f benchmarks: 0.10 small, 0.25 medium, 0.40 large.
+anova_effect_sizes = let
+    rows = NamedTuple[]
+    for r in eachrow(anova_table)
+        eta2p = (r.F * r.df1) / (r.F * r.df1 + r.df2)
+        f     = sqrt(eta2p / (1 - eta2p))
+        push!(rows, (param=r.param, F=r.F, df1=r.df1, df2=r.df2,
+                     partial_eta2=eta2p, cohens_f=f))
+    end
+    DataFrame(rows)
+end
+
 # ╔═╡ dada0052-0000-4000-8000-000000000052
 posthoc_v   = paired_posthoc(ddm_params_df, :v)
 
@@ -1306,6 +1321,7 @@ end
 # ╟─dada004f-0000-4000-8000-00000000004f
 # ╠═dada0050-0000-4000-8000-000000000050
 # ╠═dada0051-0000-4000-8000-000000000051
+# ╠═dada0100-0000-4000-8000-000000000100
 # ╠═dada0052-0000-4000-8000-000000000052
 # ╠═dada0053-0000-4000-8000-000000000053
 # ╟─dada0054-0000-4000-8000-000000000054
