@@ -30,8 +30,8 @@ as the animal moves through the circadian cycle.
 | [`src/`](src/) | The `BehaviorModels.jl` package: model definitions and utilities. |
 | [`notebooks/`](notebooks/) | Pluto notebooks (analyses + figures) and headless fitting scripts. **See [`notebooks/README.md`](notebooks/README.md) for full setup and a per-notebook map.** |
 | [`ddmhmms/`](ddmhmms/) | Fitted DDM-HMM posteriors, one `.bson` per animal (`K=4`, tied-full parameterization). |
-| [`data/`](data/) | Trial-level behavioral data (raw and preprocessed). See [`DATA.md`](DATA.md). |
-| [`results/`](results/) | Derived outputs: BIC/model-comparison summaries, ELBO histories, fitted transition matrices. See [`DATA.md`](DATA.md). |
+| [`data/`](data/) | Trial-level behavioral data (raw and preprocessed). Column-by-column codebook in [`data/README.md`](data/README.md). |
+| [`results/`](results/) | Derived outputs: BIC/model-comparison summaries, ELBO histories, fitted transition matrices. Documented in [`data/README.md`](data/README.md). |
 | [`R/`](R/) | `GAMS_Flashes_24Hour.R` — GAMs of accuracy, RT, and trial rate vs. time of day. |
 
 ### What's in `src/`
@@ -71,6 +71,10 @@ A natural reading order: `DataPreprocess.jl` -> `FitDDMHMMs.jl` /
 
 ## Reproducing figures
 
+**[`notebooks/README.md` §6](notebooks/README.md#6-reproducing-the-published-figures)
+maps every published figure panel to the script that produces it**, along with the
+order in which the fitting and figure notebooks must be run.
+
 The notebooks regenerate the source figures. As `notebooks/README.md` explains,
 don't expect these to match the published panels pixel-for-pixel: the published
 versions were exported as vector graphics and then cleaned up in Adobe Illustrator.
@@ -80,9 +84,12 @@ and layout were polished by hand.
 ## Data
 
 Behavioral data and derived model outputs are documented column-by-column in
-[`DATA.md`](DATA.md). Raw and preprocessed trial tables are in [`data/`](data/);
-fitted models are in [`ddmhmms/`](ddmhmms/); summary tables are in
+[`data/README.md`](data/README.md). Raw and preprocessed trial tables are in
+[`data/`](data/); fitted models are in [`ddmhmms/`](ddmhmms/); summary tables are in
 [`results/`](results/).
+
+The dataset is also archived on Zenodo, which is the citable version of record:
+[10.5281/zenodo.22148167](https://doi.org/10.5281/zenodo.22148167) (CC BY 4.0).
 
 ## Citation
 

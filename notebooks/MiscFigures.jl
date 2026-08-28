@@ -82,15 +82,28 @@ begin
 end
 
 # ╔═╡ face0007-0000-4000-8000-000000000007
-trial_time_plot = histogram(
-    time_hours;
-    fontfamily = "helvetica",
-    bins       = 48,
-    xlabel     = "Time from light on (H)",
-    ylabel     = "Count",
-    xlims      = (0, 24),
-    legend     = false,
-)
+begin
+    # Light/dark phase and feeding window are shaded as in Figures 2 and 4:
+    # lights go off 12 h after lights-on, and rats are fed 14:00-16:00, i.e.
+    # 6.5-8.5 h after the 07:30 lights-on reference.
+    dark_span    = (12.0, 24.0)
+    feeding_span = (6.5, 8.5)
+
+    trial_time_plot = plot(;
+        fontfamily = "helvetica",
+        xlabel     = "Time from light on (H)",
+        ylabel     = "Count",
+        xlims      = (0, 24),
+        xticks     = 0:4:24,
+        legend     = false,
+    )
+    vspan!(trial_time_plot, collect(dark_span);
+           color = :grey90, alpha = 0.5, linewidth = 0, label = "")
+    vspan!(trial_time_plot, collect(feeding_span);
+           color = :lightyellow, alpha = 0.8, linewidth = 0, label = "")
+    histogram!(trial_time_plot, time_hours; bins = 48)
+    trial_time_plot
+end
 
 # ╔═╡ face0008-0000-4000-8000-000000000008
 md"""
