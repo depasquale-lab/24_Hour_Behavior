@@ -32,6 +32,7 @@ as the animal moves through the circadian cycle.
 | [`ddmhmms/`](ddmhmms/) | Fitted DDM-HMM posteriors, one `.bson` per animal (`K=4`, tied-full parameterization). |
 | [`data/`](data/) | Trial-level behavioral data (raw and preprocessed). Column-by-column codebook in [`data/README.md`](data/README.md). |
 | [`results/`](results/) | Derived outputs: BIC/model-comparison summaries, ELBO histories, fitted transition matrices. Documented in [`data/README.md`](data/README.md). |
+| [`cluster/`](cluster/) | SGE job wrappers for the long fits (see [`notebooks/README.md`](notebooks/README.md#cluster-scripts)). |
 | [`R/`](R/) | `GAMS_Flashes_24Hour.R` — GAMs of accuracy, RT, and trial rate vs. time of day. |
 
 ### What's in `src/`

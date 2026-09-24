@@ -116,5 +116,19 @@ Derived summary tables and intermediate outputs.
 | `eddm_elbo_history_by_rat.csv` | ELBO optimization trace per animal. Columns: `rat_name`, `iter`, `elbo`. |
 | `best_gammas2.jld2` | Best-fit posterior state responsibilities (γ), stored as a [JLD2](https://github.com/JuliaIO/JLD2.jl) file. |
 
+Added in revision. Scripts are listed in [`notebooks/README.md`](../notebooks/README.md#added-in-revision).
+
+| Path | Description |
+|------|-------------|
+| `final_ddmhmms/final_ddmhmms/` | Final K = 4 tied-full DDM-HMM fits, one BSON per 24-hour animal (18). All the revision analyses read these. |
+| `final_ddmhmms/ddmhmmfit_compat/` | The same fits, re-saved in the `ddmhmms/` compatibility format. |
+| `final_ddmhmms/state_parameters_long.csv` | One row per rat × state. Columns: `rat`, `state`, DDM parameters `B`, `v`, `a0`, `tau`, `occupancy`, self-transition `p_self`, expected `dwell` (trials), posterior-weighted `acc`, `rt_mean`, `rt_sd`, `p_right`, `abs_df`, `init_time`, and the rat's `n_trials` and `logL`. |
+| `final_ddmhmms/state_{psychometric,chronometric,transitions}_long.csv`, `state_psychometric_slopes.csv` | Per-state psychometric and chronometric curves, transition matrices and psychometric slopes, written by `ExtractStateParameters.jl`. |
+| `final_ddmhmms/state_engagement_{summary,deciles,stats}.csv`, `state_bout_profile.csv` | Inputs to the trial-initiation (ITI) figure, written by `StateEngagementITI.jl`. |
+| `final_ddmhmms/bic_comparison_results/` | Per-rat BIC CSVs from the constrained refits. `MergeBicSummaries.jl` combines them. |
+| `parameter_recovery/recovery_summary.csv` | One row per recovery task: `rat`, `rep`, session fraction `frac`, `n_sessions`, `n_trials`, decoding accuracy of the recovered and true models, and logL under the true, recovered, truth-initialised and Baum–Welch-only fits. |
+| `parameter_recovery/recovery_long.csv` | One row per task × state × parameter, comparing true and recovered values. |
+| `ddm_hmm_state_sweep/` | K = 1…5 sweeps on the session-based animals: raw logL/BIC (`state_sweep_summary.csv`) and 5-fold CV (`cv/cv_state_sweep_summary.csv`), with per-fold BSONs in `cv/`. |
+
 Parameter symbols follow the following convention: `v` drift rate, `B` boundary separation, 
 `a0` starting-point bias, `τ` non-decision time.
