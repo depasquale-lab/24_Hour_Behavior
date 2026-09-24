@@ -11,10 +11,10 @@ end
 function train_test_split(dataset::Vector{Vector}, k::Int)
     n = length(dataset)
     fold_size = Int(n / k)
-    
+
     # Create shuffled indices
     indices = randperm(n)
-    
+
     # Split into k folds
     folds = Vector{Vector{Int}}(undef, k)
     for i in 1:k
@@ -22,11 +22,11 @@ function train_test_split(dataset::Vector{Vector}, k::Int)
         end_idx = i == k ? n : i * fold_size  # Handle remainder in last fold
         folds[i] = indices[start_idx:end_idx]
     end
-    
+
     return folds
 end
 
-function synthetictrial(totalFlashes::Int; p_correct::Float64 = 0.75)
+function synthetictrial(totalFlashes::Int; p_correct::Float64=0.75)
     @assert 0.0 ≤ p_correct ≤ 1.0
     correct_stimulus = rand(Bool) ? 1 : 0
 
@@ -38,9 +38,13 @@ function synthetictrial(totalFlashes::Int; p_correct::Float64 = 0.75)
     end
     n_flashes_0 = totalFlashes - n_flashes_1
 
-    response = n_flashes_0 > n_flashes_1 ? 0 :
-               n_flashes_1 > n_flashes_0 ? 1 :
-               (rand(Bool) ? 1 : 0)
+    response = if n_flashes_0 > n_flashes_1
+        0
+    elseif n_flashes_1 > n_flashes_0
+        1
+    else
+        (rand(Bool) ? 1 : 0)
+    end
 
     return (response == correct_stimulus)
 end
@@ -61,4 +65,3 @@ function majority_accuracy(N::Integer, p::Real)
     end
     return acc
 end
-

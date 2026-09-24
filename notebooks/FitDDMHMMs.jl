@@ -18,8 +18,9 @@ struct DDMHMMFit
 end
 
 # don't need for this but will keep here for future reference
-function load_best_ddmhmm(rat::AbstractString, K::Int;
-                          results_dir = joinpath("results", "ddm_hmm"))
+function load_best_ddmhmm(
+    rat::AbstractString, K::Int; results_dir=joinpath("results", "ddm_hmm")
+)
     filename = joinpath(results_dir, "$(rat)_K$(K)_best.bson")
     @load filename fit
     return fit::DDMHMMFit
@@ -42,7 +43,9 @@ rat_df = rat_df[rat_df.daily .== "daily", :] # only keep 24 hour data
 replace!(rat_df[!, :choose_right], 0 => -1)
 
 mapping = Dict("right" => 1, "left" => -1)
-DataFrames.transform!(rat_df, :correct_side => ByRow(cs -> get(mapping, cs, missing)) => :correct_side_numeric)
+DataFrames.transform!(
+    rat_df, :correct_side => ByRow(cs -> get(mapping, cs, missing)) => :correct_side_numeric
+)
 
 names = String.(unique(rat_df[!, "name"]))
 
@@ -54,10 +57,10 @@ function data_for_ddmhmm(rat_idx::Int)
 
     rat_of_interest = rat_df[rat_df.name .== rat, :]
     dates = [Date(split(dt)[1]) for dt in rat_of_interest.trial_datetime]
-        
+
     # Get unique dates in chronological order
     unique_dates = sort(unique(dates))
-        
+
     # Create a vector of vectors, where each inner vector contains DDMResults for one day
     results_by_date = Vector{Vector{DDMResult}}()
 
@@ -74,19 +77,22 @@ function data_for_ddmhmm(rat_idx::Int)
         day_rts = rat_of_interest.rt[day_indices]
         day_outcomes = rat_of_interest.choose_right[day_indices]
         day_stim_side = rat_of_interest.correct_side_numeric[day_indices]
-            
+
         # Create DDMResult objects for this day
-        day_results = [DDMResult(rt, choice, stim) for (rt, choice, stim) in zip(day_rts, day_outcomes, day_stim_side)]
-        
+        day_results = [
+            DDMResult(rt, choice, stim) for
+            (rt, choice, stim) in zip(day_rts, day_outcomes, day_stim_side)
+        ]
+
         # Add to our vector of vectors
         push!(results_by_date, day_results)
     end
 
     # Now calculate the sequence ends (cumulative sum of lengths)
-	seq_ends = cumsum([length(seq) for seq in results_by_date])
-	
-	# Concatenate all results into a single vector
-	all_results = reduce(vcat, results_by_date)
+    seq_ends = cumsum([length(seq) for seq in results_by_date])
+
+    # Concatenate all results into a single vector
+    all_results = reduce(vcat, results_by_date)
 
     return all_results, seq_ends, results_by_date
 end
@@ -116,14 +122,13 @@ function generate_ddmhmm_initialization(n_states::Int)
     non_decision_time = 0.1
 
     for i in 1:n_states
-        emissions_init[i] = DriftDiffusionModel(exp(log_drift[i]), exp(log_boundary[i]), bias[i], non_decision_time)
+        emissions_init[i] = DriftDiffusionModel(
+            exp(log_drift[i]), exp(log_boundary[i]), bias[i], non_decision_time
+        )
     end
-
-    
 
     return PriorHMM(init_init, trans_init, emissions_init, 1, 1)
 end
-    
 
 """
     fit_best_ddmhmm_for_rat(rat_idx::Int, n_states::Int;
@@ -136,12 +141,14 @@ For a given rat and a given number of states `n_states`, run Baum–Welch
 from `n_inits` random initializations and return the best-fitting model
 according to the final log-likelihood.
 """
-function fit_best_ddmhmm_for_rat(rat_idx::Int, n_states::Int;
-                                 n_inits::Int = max(N_ITERS, 1),
-                                 atol::Float64 = 1e-3,
-                                 max_iter::Int = 100,
-                                 loglikelihood_increasing::Bool = false)
-
+function fit_best_ddmhmm_for_rat(
+    rat_idx::Int,
+    n_states::Int;
+    n_inits::Int=max(N_ITERS, 1),
+    atol::Float64=1e-3,
+    max_iter::Int=100,
+    loglikelihood_increasing::Bool=false,
+)
     obs_seq, seq_ends, _ = data_for_ddmhmm(rat_idx)
 
     best_hmm = nothing
@@ -155,10 +162,10 @@ function fit_best_ddmhmm_for_rat(rat_idx::Int, n_states::Int;
             hmm_est, logL_evolution = HiddenMarkovModels.baum_welch(
                 prior,
                 obs_seq;
-                seq_ends = seq_ends,
-                atol = atol,
-                max_iterations = max_iter,
-                loglikelihood_increasing = loglikelihood_increasing,
+                seq_ends=seq_ends,
+                atol=atol,
+                max_iterations=max_iter,
+                loglikelihood_increasing=loglikelihood_increasing,
             )
 
             final_ll = last(logL_evolution)
@@ -169,7 +176,9 @@ function fit_best_ddmhmm_for_rat(rat_idx::Int, n_states::Int;
                 best_logL_evolution = logL_evolution
             end
         catch e
-            @warn "Baum–Welch failed for rat index $rat_idx, K=$n_states, init $init_id" exception=(e, catch_backtrace())
+            @warn "Baum–Welch failed for rat index $rat_idx, K=$n_states, init $init_id" exception=(
+                e, catch_backtrace()
+            )
         end
     end
 
@@ -179,7 +188,7 @@ end
 results_dir = joinpath("results", "ddm_hmm")
 isdir(results_dir) || mkpath(results_dir)
 
-best_models = Dict{Tuple{String,Int}, DDMHMMFit}()
+best_models = Dict{Tuple{String,Int},DDMHMMFit}()
 
 for (rat_idx, rat) in enumerate(names)
     for K in N_STATES
@@ -194,4 +203,3 @@ for (rat_idx, rat) in enumerate(names)
         @info "Saved best model for rat $rat, K = $K to $filename (logL = $(fit.logL))"
     end
 end
-

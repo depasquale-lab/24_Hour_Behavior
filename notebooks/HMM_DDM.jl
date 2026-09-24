@@ -18,43 +18,51 @@ end
 
 # ╔═╡ 78358d30-9f9e-11f0-2e63-271b654f4d98
 begin
-	using PlutoUI
-	using CSV
-	using Distributions
-	using Turing
-	using Bijectors
-	using HiddenMarkovModels
-	using StatsFuns
-	using DataFrames
-	using StatsAPI
-	using DensityInterface
-	using Optim
-	using ForwardDiff
-	using UnPack
-	using SpecialFunctions
-	using Plots
-	using Dates
+    using PlutoUI
+    using CSV
+    using Distributions
+    using Turing
+    using Bijectors
+    using HiddenMarkovModels
+    using StatsFuns
+    using DataFrames
+    using StatsAPI
+    using DensityInterface
+    using Optim
+    using ForwardDiff
+    using UnPack
+    using SpecialFunctions
+    using Plots
+    using Dates
 
-	include("/Users/ryansenne/Documents/GitHub/24_Hour_Behavior/src/BehaviorModels.jl")
-	include("/Users/ryansenne/Documents/GitHub/DriftDiffusionModels.jl/src/DriftDiffusionModels.jl")
+    include("/Users/ryansenne/Documents/GitHub/24_Hour_Behavior/src/BehaviorModels.jl")
+    include(
+        "/Users/ryansenne/Documents/GitHub/DriftDiffusionModels.jl/src/DriftDiffusionModels.jl",
+    )
 
-	using .BehaviorModels
-	using .DriftDiffusionModels
+    using .BehaviorModels
+    using .DriftDiffusionModels
 end
 
 # ╔═╡ ed02297f-9119-449b-96a0-b39bd0463b6b
 begin
-	# read the data
-	rat_df= CSV.read("/Users/ryansenne/Documents/GitHub/24_Hour_Behavior/data/processed_rat_data.csv.gz", DataFrame)
-	rat_df = rat_df[rat_df.daily .== "24 hr", :] # only keep 24 hour data
+    # read the data
+    rat_df = CSV.read(
+        "/Users/ryansenne/Documents/GitHub/24_Hour_Behavior/data/processed_rat_data.csv.gz",
+        DataFrame,
+    )
+    rat_df = rat_df[rat_df.daily .== "24 hr", :] # only keep 24 hour data
 
-	# preprocess the data to have numerics
-	replace!(rat_df[!, :choose_right], 0 => -1)
+    # preprocess the data to have numerics
+    replace!(rat_df[!, :choose_right], 0 => -1)
 
-	mapping = Dict("right" => 1, "left" => -1)
-	DataFrames.transform!(rat_df, :correct_side => ByRow(cs -> get(mapping, cs, missing)) => :correct_side_numeric)
+    mapping = Dict("right" => 1, "left" => -1)
+    DataFrames.transform!(
+        rat_df,
+        :correct_side => ByRow(cs -> get(mapping, cs, missing)) => :correct_side_numeric,
+    )
 
-	names = unique(rat_df[!, "name"])
+    names = unique(rat_df[!, "name"])
 end
 
 # ╔═╡ 389eeb45-6b46-40b2-9163-72aca49c2a3f
@@ -62,60 +70,65 @@ end
 
 # ╔═╡ f370fca1-db94-4d34-b962-a9ec120a571a
 begin
-	rat_of_interest = rat_df[rat_df.name .== rat, :]
-	dates = [Date(split(dt)[1]) for dt in rat_of_interest.trial_datetime]
-	
-	# Get unique dates in chronological order
-	unique_dates = sort(unique(dates))
-	
-	# Create a vector of vectors, where each inner vector contains DDMResults for one day
-	results_by_date = Vector{Vector{DDMResult}}()
-	
-	for date in unique_dates
-	    # Get indices for this date
-	    day_indices = findall(dates .== date)
-	    
-	    # Skip days with no valid data
-	    if isempty(day_indices)
-	        continue
-	    end
-	    
-	    # Extract RTs and outcomes for this date
-	    day_rts = rat_of_interest.rt[day_indices]
-	    day_outcomes = rat_of_interest.choose_right[day_indices]
-	    day_stim_side = rat_of_interest.correct_side_numeric[day_indices]
-	    
-	    # Create DDMResult objects for this day
-	    day_results = [DDMResult(rt, choice, stim) for (rt, choice, stim) in zip(day_rts, day_outcomes, day_stim_side)]
-	
-	    # Add to our vector of vectors
-	    push!(results_by_date, day_results)
-	end 
+    rat_of_interest = rat_df[rat_df.name .== rat, :]
+    dates = [Date(split(dt)[1]) for dt in rat_of_interest.trial_datetime]
 
-	# Now calculate the sequence ends (cumulative sum of lengths)
-	seq_ends = cumsum([length(seq) for seq in results_by_date])
-	
-	# Concatenate all results into a single vector
-	all_results = reduce(vcat, results_by_date)
+    # Get unique dates in chronological order
+    unique_dates = sort(unique(dates))
+
+    # Create a vector of vectors, where each inner vector contains DDMResults for one day
+    results_by_date = Vector{Vector{DDMResult}}()
+
+    for date in unique_dates
+        # Get indices for this date
+        day_indices = findall(dates .== date)
+
+        # Skip days with no valid data
+        if isempty(day_indices)
+            continue
+        end
+
+        # Extract RTs and outcomes for this date
+        day_rts = rat_of_interest.rt[day_indices]
+        day_outcomes = rat_of_interest.choose_right[day_indices]
+        day_stim_side = rat_of_interest.correct_side_numeric[day_indices]
+
+        # Create DDMResult objects for this day
+        day_results = [
+            DDMResult(rt, choice, stim) for
+            (rt, choice, stim) in zip(day_rts, day_outcomes, day_stim_side)
+        ]
+
+        # Add to our vector of vectors
+        push!(results_by_date, day_results)
+    end
+
+    # Now calculate the sequence ends (cumulative sum of lengths)
+    seq_ends = cumsum([length(seq) for seq in results_by_date])
+
+    # Concatenate all results into a single vector
+    all_results = reduce(vcat, results_by_date)
 end
 
 # ╔═╡ ec91d983-f18d-4a38-bdf1-eef871103efe
 begin
-	init_trans = [0.97 0.01 0.01 0.01;
-				  0.01 0.97 0.01 0.01;
-				  0.01 0.01 0.97 0.01;
-				  0.01 0.01 0.01 0.97]
+    init_trans = [
+        0.97 0.01 0.01 0.01;
+        0.01 0.97 0.01 0.01;
+        0.01 0.01 0.97 0.01;
+        0.01 0.01 0.01 0.97
+    ]
 
-	init_dist = [1/4, 1/4, 1/4, 1/4]
+    init_dist = [1/4, 1/4, 1/4, 1/4]
 
-	init_ddms = [
-		DriftDiffusionModel(1.5, 1.0, 0.5, 0.1),
-		DriftDiffusionModel(1.0, 0.8, 0.5, 0.1),
-		DriftDiffusionModel(1.0, 0.5, 0.5, 0.1),
-		DriftDiffusionModel(1.0, 0.9, 0.5, 0.1)
-	]
+    init_ddms = [
+        DriftDiffusionModel(1.5, 1.0, 0.5, 0.1),
+        DriftDiffusionModel(1.0, 0.8, 0.5, 0.1),
+        DriftDiffusionModel(1.0, 0.5, 0.5, 0.1),
+        DriftDiffusionModel(1.0, 0.9, 0.5, 0.1),
+    ]
 
-	hmm_init = PriorHMM(init_dist, init_trans, init_ddms, 1, 1)
+    hmm_init = PriorHMM(init_dist, init_trans, init_ddms, 1, 1)
 end
 
 # ╔═╡ 29480393-017e-414c-8e4e-8a2d82dc8e2a
@@ -129,8 +142,8 @@ state, sim_data = rand(hmm_est, 20000)
 
 # ╔═╡ 9036d7cb-a54d-4d61-bbd4-03850b801456
 begin
-	histogram([i.rt for i in all_results], normalize=:pdf)
-	histogram!([i.rt for i in sim_data], normalize=:pdf, fillalpha=0.9)
+    histogram([i.rt for i in all_results]; normalize=:pdf)
+    histogram!([i.rt for i in sim_data]; normalize=:pdf, fillalpha=0.9)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001

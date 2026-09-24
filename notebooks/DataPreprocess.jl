@@ -7,7 +7,7 @@ function preprocess_data(df::DataFrame; outdir::String=joinpath(@__DIR__, "..", 
 
     # 1) Count flashes from binary strings like "101" -> 2, "010" -> 1
     count_ones = x -> x === missing ? missing : count(==('1'), x)
-    df[!, :flashes_left]  = map(count_ones, df[!, :flashes_left])
+    df[!, :flashes_left] = map(count_ones, df[!, :flashes_left])
     df[!, :flashes_right] = map(count_ones, df[!, :flashes_right])
 
     # 2) Drop omissions (if any)
@@ -44,9 +44,10 @@ end
 # Usage
 data_path = joinpath(@__DIR__, "..", "data", "rat_data.csv")
 raw_data = CSV.read(
-    data_path, DataFrame;
-    types = Dict(:flashes_left => String, :flashes_right => String),
-    stringtype = String
+    data_path,
+    DataFrame;
+    types=Dict(:flashes_left => String, :flashes_right => String),
+    stringtype=String,
 )
 
 processed = preprocess_data(copy(raw_data))

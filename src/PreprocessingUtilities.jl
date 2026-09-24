@@ -1,11 +1,12 @@
 export tag_sessions!, summarize_sessions, to_glmhmm_sequences
 
 # 1) Tag sessions (midnight→midnight), order trials, add within-session indices
-function tag_sessions!(df::DataFrame;
-    subject::Symbol = :name,
-    tcol::Symbol    = :trial_datetime,
-    trialcol::Symbol = :trial,
-    parse_format::DateFormat = dateformat"yyyy-mm-dd HH:MM:SS",
+function tag_sessions!(
+    df::DataFrame;
+    subject::Symbol=:name,
+    tcol::Symbol=:trial_datetime,
+    trialcol::Symbol=:trial,
+    parse_format::DateFormat=dateformat"yyyy-mm-dd HH:MM:SS",
 )
     df = copy(df)  # keep original intact
 
@@ -33,19 +34,20 @@ function tag_sessions!(df::DataFrame;
 end
 
 # 2) Build a reusable session summary table for plotting/QA
-function summarize_sessions(g::GroupedDataFrame;
-    tcol::Symbol = :trial_datetime,
-    rtcol::Symbol = :rt,
-    outcol::Symbol = :outcome,                 # still supported if you use it elsewhere
-    choose_right_col::Union{Symbol,Nothing} = :choose_right,  # add prop_right if present
+function summarize_sessions(
+    g::GroupedDataFrame;
+    tcol::Symbol=:trial_datetime,
+    rtcol::Symbol=:rt,
+    outcol::Symbol=:outcome,                 # still supported if you use it elsewhere
+    choose_right_col::Union{Symbol,Nothing}=:choose_right,  # add prop_right if present
 )
     # Core aggregations
     aggs = Any[
-        nrow            => :n_trials,
-        tcol            => first => :start_time,
-        tcol            => last  => :end_time,
-        tcol            => (x -> last(x) - first(x)) => :duration,
-        rtcol           => mean => :mean_rt,
+        nrow => :n_trials,
+        tcol => first => :start_time,
+        tcol => last => :end_time,
+        tcol => (x -> last(x) - first(x)) => :duration,
+        rtcol => mean => :mean_rt,
     ]
     # Optionally include proportion of right choices
     if choose_right_col !== nothing && hasproperty(parent(g), choose_right_col)
@@ -64,11 +66,12 @@ function summarize_sessions(g::GroupedDataFrame;
     return sessions
 end
 
-function to_glmhmm_sequences(df::DataFrame;
-    subject::Symbol = :name,
-    session_id::Symbol = :session_id,
-    features::Vector{Symbol} = [:delta_flashes],  # you can pass more later
-    target::Symbol  = :choose_right               # numeric {0,1} (or nonzero→1)
+function to_glmhmm_sequences(
+    df::DataFrame;
+    subject::Symbol=:name,
+    session_id::Symbol=:session_id,
+    features::Vector{Symbol}=[:delta_flashes],  # you can pass more later
+    target::Symbol=:choose_right,               # numeric {0,1} (or nonzero→1)
 )
     g = groupby(df, [subject, session_id])
     seqs = Vector{Vector{GLMObs}}(undef, length(g))

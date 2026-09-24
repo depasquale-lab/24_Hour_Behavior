@@ -12,12 +12,12 @@ end
 augment_with_intercept(x::AbstractVector) = vcat(one(eltype(x)), x)
 
 # A Bernoulli GLM whose linear predictor is dot(β, x_aug), where β includes intercept
-struct BernoulliGLM{Tβ<:AbstractVector} <: Distributions.Distribution{Univariate, Discrete}
+struct BernoulliGLM{Tβ<:AbstractVector} <: Distributions.Distribution{Univariate,Discrete}
     β::Tβ          # includes intercept as β[1]
 end
 
 # Log-likelihood, AD-safe with clamping
-Distributions.logpdf(d::BernoulliGLM, o::GLMObs) = begin
+function Distributions.logpdf(d::BernoulliGLM, o::GLMObs)
     @assert o.y == 0 || o.y == 1
     η = dot(d.β, o.x)               # linear predictor (intercept included)
     p = logistic(η)
@@ -28,7 +28,7 @@ end
 # Minimal interface bits HiddenMarkovModels/Distributions expect
 Base.eltype(::Type{BernoulliGLM{Tβ}}) where {Tβ} = Int
 Base.length(::BernoulliGLM) = 1
-Distributions.support(::BernoulliGLM) = Distributions.RealInterval(0, 1) 
+Distributions.support(::BernoulliGLM) = Distributions.RealInterval(0, 1)
 
 """
     glmhmm(data, K)
@@ -95,13 +95,13 @@ end
 
 function simple_ar_model(data::AbstractVector{<:BehaviorTrial}, p::Int)
     logRT = map(d -> log(d.RT), data)
-    X, y  = lag_matrix(logRT, p)
+    X, y = lag_matrix(logRT, p)
 
     @model function ar_regression(y, X)
         p1 = size(X, 2)
-        β  ~ MvNormal(zeros(p1), 5.0I)  # intercept + p AR coeffs
+        β ~ MvNormal(zeros(p1), 5.0I)  # intercept + p AR coeffs
         σ2 ~ InverseGamma(2.0, 2.0)     # variance
-        σ   = sqrt(σ2)
+        σ = sqrt(σ2)
 
         μ = X * β
         @inbounds for i in eachindex(y)
