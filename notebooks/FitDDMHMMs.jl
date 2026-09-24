@@ -26,8 +26,8 @@ function load_best_ddmhmm(
     return fit::DDMHMMFit
 end
 
-const N_ITERS = 5 # how many times to fit the DDM-HMM per animal
-const N_STATES = [2, 3] # which hidden states to fit over
+const N_ITERS = 10 # how many times to fit the DDM-HMM per animal
+const N_STATES = [3, 4] # which hidden states to fit over
 
 # set random seed
 Random.seed!(67)  # this seed is bussin fr fr on god
@@ -37,7 +37,7 @@ data_file = joinpath("data", "processed_rat_data.csv.gz")
 
 # Read in and structure data
 rat_df = CSV.read(data_file, DataFrame)
-rat_df = rat_df[rat_df.daily .== "daily", :] # only keep 24 hour data
+rat_df = rat_df[rat_df.daily .== "daily", :] # only keep daily data
 
 # preprocess the data to have numerics
 replace!(rat_df[!, :choose_right], 0 => -1)
@@ -203,3 +203,4 @@ for (rat_idx, rat) in enumerate(names)
         @info "Saved best model for rat $rat, K = $K to $filename (logL = $(fit.logL))"
     end
 end
+

@@ -7,6 +7,7 @@ CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
 CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 DriftDiffusionModels = "fd42b4bb-98ff-4b36-9e51-f407bd71120d"
@@ -28,4 +29,4 @@ Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
 
 [sources]
 BehaviorModels = {path = ".."}
-DriftDiffusionModels = {path = "\\Users\\senne\\Documents\\GitHub\\DriftDiffusionModels.jl"}
+DriftDiffusionModels = {path = "../../DriftDiffusionModels.jl"}

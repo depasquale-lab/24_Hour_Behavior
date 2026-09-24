@@ -1,1 +1,28 @@
 Manifest.toml
+
+# errata
+results/ddm_hmm
+results/ddm_hmm_constrained
+results/ddm_hmm_gradient
+
+# SGE job output
+logs/
+*.o[0-9]*
+*.e[0-9]*
+
+# too large for GitHub (>100MB); keep local only
+results/eddm_trial_posteriors_by_rat.csv
+
+# stale outputs no current script produces
+results/_archive/
+
+# PNG previews: every figure is also saved as .svg
+results/**/*.png
+
+# regenerable intermediates (merged summaries / final fits are tracked)
+results/ddm_hmm_state_sweep/cv/*.bson
+results/ddm_hmm_state_sweep/cv/per_task_summaries/
+results/ddm_hmm_state_sweep/per_task_summaries/
+results/parameter_recovery/tasks/
+results/final_ddmhmms/ddmhmmfit_compat/
+results/final_ddmhmms/bic_comparison_results/
