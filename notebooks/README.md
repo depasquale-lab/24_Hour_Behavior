@@ -212,9 +212,17 @@ transparency, but none of them is a manuscript figure.
 | `CrossValidateVTied.jl` | Held-out logL for full vs. tied-drift fits. | `ddm_hmm_constrained/cv_*_fold*.csv` |
 | `CompareVTiedVsFull.jl` | When drift is tied across states, how do the other parameters compensate? | `ddm_hmm_constrained/v_tied_compensation/` |
 | `DirectGradientDDMHMM.jl` | Single-rat check of the direct-gradient fitter. | `ddm_hmm_constrained/direct_gradient_<rat>/` |
+| `FitTimeOfDayDDM.jl` | Is the DDM-HMM just tracking time of day? Fits a single-state DDM whose bound, drift and starting point are Fourier functions of clock time (H = 0…3 harmonics; `VARY_TAU=1` also lets τ vary), on the same session-blocked folds as the 24 h DDM-HMM CV, plus an all-data fit for BIC. Merge with `julia notebooks/FitTimeOfDayDDM.jl merge`. | `tod_ddm/` (τ fixed), `tod_ddm_vary_tau/` (τ varying): `tod_ddm_summary.csv` |
+| `CompareTimeOfDayDDM.jl` | Held-out logL and BIC of the best time-of-day DDM vs. the K = 4 DDM-HMM, per rat. Set `VARY_TAU=1` for the τ-varying fits. | `tod_ddm{,_vary_tau}/tod_vs_hmm_{cv,bic}.csv` |
+| `TimeOfDayFloorCheck.jl` | Repeats the held-out comparison without trials that hit the WFPT density floor (RT ≤ τ), so the gain is not driven by floored trials. | `tod_ddm_vary_tau/floor_check{,_by_fold}.csv` |
+| `PlotTimeOfDayComparison.jl` | Figure: held-out gain over the DDM for the time-of-day DDM and the DDM-HMM, with and without floored trials, and the all-data BIC difference. | `tod_ddm_vary_tau/tod_vs_hmm.svg` |
+| `TimeOfDayParameterCurves.jl` | DDM parameters by hour from lights-on: the DDM-HMM's posterior-weighted trial parameters vs. the time-of-day DDM's curves, and how much of the HMM's trial-level parameter variance hour of day explains. | `tod_ddm_vary_tau/param_curves_long.csv`, `param_variance_by_hour.csv` |
+| `PlotTimeOfDayParameterCurves.jl` | Figure for the analysis above: one example rat, then all rats with each curve centred on its own daily mean. | `tod_ddm_vary_tau/param_curves.svg` |
 
 `results/ddm_hmm_constrained/` and `results/ddm_hmm_gradient/` are gitignored,
-so the last three only have outputs on a machine where they have been run.
+so `CrossValidateVTied.jl`, `CompareVTiedVsFull.jl` and `DirectGradientDDMHMM.jl` only have
+outputs on a machine where they have been run. The time-of-day per-rat fits
+(`tod_ddm*/per_rat/`) are gitignored too; the merged summaries are tracked.
 
 ### Cluster scripts
 
@@ -232,12 +240,15 @@ original cluster, so edit that line and the `#$ -P` project before running
 | `run_parameterRecovery.sh` | `ParameterRecovery.jl` | recovery tasks |
 | `run_stateSweepDaily_array.sh` | `StateSweepDaily.jl` | daily rats |
 | `run_crossValidateStatesDaily_array.sh` | `CrossValidateStatesDaily.jl` | rat × fold |
+| `run_crossValidateStates24hr_array.sh` | `CrossValidateStatesDaily.jl` (`GROUP=24hr`) | rat × fold |
 | `run_crossValidateVTied_array.sh` | `CrossValidateVTied.jl` | rats |
 | `run_eDDMExact_array.sh` | `eDDMExact.jl` | rats |
 | `run_eDDMExactDaily_array.sh` | `eDDMExact.jl` (`GROUP=daily`) | session rats |
 | `run_eDDMExactCV_{24hr,daily}_array.sh` | `eDDMExact.jl cv` | rat × fold |
 | `run_cvShuffled_{24hr,daily}_array.sh` | `CrossValidateStatesDaily.jl` (`SHUFFLE=1`, K = 4) | rat × fold |
 | `run_sessionSplit_{24hr,daily}_array.sh` | `SessionSplitDDM.jl` | rats |
+| `run_timeOfDayDDM_array.sh` | `FitTimeOfDayDDM.jl` (set `VARY_TAU=1` for the τ-varying fits) | rats |
+| `run_sessionCohortFinalize.sh` | all session-cohort merges, then `SessionCohortSummary.jl` and `PlotSessionCohortFigure.jl` | — (submit with `-hold_jid` on the jobs above) |
 
 After an array job finishes, run the matching `Merge*.jl` script to combine the
 per-task outputs.
