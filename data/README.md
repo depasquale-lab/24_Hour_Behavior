@@ -127,6 +127,7 @@ Added in revision. Scripts are listed in [`notebooks/README.md`](../notebooks/RE
 | `final_ddmhmms/state_engagement_{summary,deciles,stats}.csv`, `state_bout_profile.csv` | Inputs to the trial-initiation (ITI) figure, written by `StateEngagementITI.jl`. |
 | `final_ddmhmms/bic_comparison_results/` | Per-rat BIC CSVs from the constrained refits. `MergeBicSummaries.jl` combines them. |
 | `parameter_recovery/recovery_summary.csv` | One row per recovery task: `rat`, `rep`, session fraction `frac`, `n_sessions`, `n_trials`, decoding accuracy of the recovered and true models, and logL under the true, recovered, truth-initialised and Baum–Welch-only fits. |
+| `parameter_recovery/recovery_scaling.csv` | Per parameter: within-rat power-law exponent `beta` of scaled recovery error vs. trials, rat-bootstrap 95% CI (`lo`, `hi`), intercept `alpha`, `n_rats`. |
 | `parameter_recovery/recovery_long.csv` | One row per task × state × parameter, comparing true and recovered values. |
 | `ddm_hmm_state_sweep/` | K = 1…5 sweeps on the session-based animals: raw logL/BIC (`state_sweep_summary.csv`) and 5-fold CV (`cv/cv_state_sweep_summary.csv`), with per-fold BSONs in `cv/`. |
 

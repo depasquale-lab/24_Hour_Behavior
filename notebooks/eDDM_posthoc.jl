@@ -61,12 +61,20 @@ md"""
 
 # ╔═╡ dade0004-0000-4000-8000-000000000004
 begin
-    results_dir    = joinpath(@__DIR__, "..", "results")
-    elbo_csv       = joinpath(results_dir, "eddm_elbo_history_by_rat.csv")
+    # :exact = maximum marginal likelihood (eDDMExact.jl, results/eddm_exact/)
+    # :vi    = legacy variational fit (eDDM.jl, results/)
+    fit_source = :exact
+
+    results_dir = fit_source == :exact ?
+        joinpath(@__DIR__, "..", "results", "eddm_exact") :
+        joinpath(@__DIR__, "..", "results")
     trial_post_csv = joinpath(results_dir, "eddm_trial_posteriors_by_rat.csv.gz")
     hyper_csv      = joinpath(results_dir, "eddm_hyperparams_by_rat.csv")
 
-    elbo_df       = CSV.read(elbo_csv,       DataFrame)
+    # convergence diagnostics: ELBO trace (VI) or per-rat fit summary (exact)
+    elbo_df = fit_source == :exact ?
+        CSV.read(joinpath(results_dir, "eddm_fit_summary_by_rat.csv"), DataFrame) :
+        CSV.read(joinpath(results_dir, "eddm_elbo_history_by_rat.csv"), DataFrame)
     trial_post_df = CSV.read(trial_post_csv, DataFrame)
     hyper_df      = CSV.read(hyper_csv,      DataFrame)
     (size(elbo_df), size(trial_post_df), size(hyper_df))
@@ -80,7 +88,18 @@ ELBO trace per rat (rebased to its minimum) to confirm convergence.
 """
 
 # ╔═╡ dade0006-0000-4000-8000-000000000006
-elbo_plot = begin
+elbo_plot = if fit_source == :exact
+    # exact fit: per-rat log-likelihood per trial, marked by convergence
+    # numeric x + explicit ticks so every rat is labelled
+    rats = string.(elbo_df.rat_name)
+    pConv = scatter(eachindex(rats), elbo_df.loglik ./ elbo_df.n_trials;
+                    color = ifelse.(elbo_df.converged, :black, :red),
+                    title = "Exact eDDM fit by rat (red = not converged)",
+                    ylabel = "logL / trial",
+                    xticks = (eachindex(rats), rats), xrotation = 45,
+                    fontfamily = "helvetica", legend = false)
+    pConv
+else
     grouped = groupby(elbo_df, :rat_name)
     pElbo = plot(title  = "ELBO history by rat",
                  xlabel = "Iteration",
@@ -364,7 +383,7 @@ Save all figures to `../results/`: $(@bind save_figs CheckBox(default = false))
 # ╔═╡ dade001a-0000-4000-8000-00000000001a
 begin
     if save_figs
-        out_dir = joinpath(@__DIR__, "..", "results")
+        out_dir = results_dir
         mkpath(out_dir)
         figs = [
             (elbo_plot,      "eddm_elbo_history_by_rat.svg"),

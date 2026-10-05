@@ -91,38 +91,35 @@ for rat in rat_order
 end
 savefig_both(p_test, joinpath(out_dir, "cv_test_ll_vs_K"))
 
-# Plot 2: Δ held-out logL per trial vs K = 1, with group mean ± SEM across rats
+# Plot 2: Δ held-out logL per trial vs K = 1; individual rats in grey, group mean in black
 
 p_gain = plot(;
     xlabel="number of states (K)",
     ylabel="Δ held-out logL per trial (vs K = $(minimum(df.K)))",
-    title="Cross-validated improvement as states are added",
-    size=(750, 520),
+    size=(420, 380),
     xticks=K_ticks,
-    legend=:outerright,
-    legendfontsize=7,
+    legend=false,
+    grid=false,
+    framestyle=:axes,
 )
+hline!(p_gain, [0.0]; color=:grey70, linestyle=:dash, linewidth=1)
 for rat in rat_order
     sub = df[df.rat .== rat, :]
-    plot!(p_gain, sub.K, sub.Δ_test_ll; label=rat, marker=:circle, markersize=3, lw=1.5)
+    plot!(p_gain, sub.K, sub.Δ_test_ll; color=:grey65, lw=1.2, alpha=0.9)
 end
 
-grp = combine(groupby(df, :K)) do sub
-    (mean_Δ=mean(sub.Δ_test_ll), sem_Δ=nrow(sub) > 1 ? std(sub.Δ_test_ll) / sqrt(nrow(sub)) : 0.0)
-end
+grp = combine(groupby(df, :K), :Δ_test_ll => mean => :mean_Δ)
 sort!(grp, :K)
 plot!(
     p_gain,
     grp.K,
     grp.mean_Δ;
-    ribbon=grp.sem_Δ,
-    label="mean ± SEM",
     color=:black,
     lw=3,
-    marker=:square,
-    markersize=4,
+    marker=:circle,
+    markersize=5,
+    markerstrokewidth=0,
 )
-hline!(p_gain, [0.0]; color=:black, linestyle=:dash, linewidth=1, label="")
 savefig_both(p_gain, joinpath(out_dir, "cv_test_ll_gain_vs_K"))
 
 # Plot 3: train vs held-out logL per trial — the overfitting gap

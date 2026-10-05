@@ -4,7 +4,12 @@ Pkg.activate("notebooks")
 
 using CSV, DataFrames
 
-out_dir = joinpath("results", "ddm_hmm_state_sweep", "cv")
+# GROUP=24hr merges the 24 hr sweep (results/ddm_hmm_state_sweep/cv_24hr).
+const GROUP = get(ENV, "GROUP", "daily")
+const SHUFFLE = get(ENV, "SHUFFLE", "0") == "1"   # SHUFFLE=1 merges the shuffled-control runs
+out_dir = joinpath(
+    "results", "ddm_hmm_state_sweep", (GROUP == "24hr" ? "cv_24hr" : "cv") * (SHUFFLE ? "_shuffled" : "")
+)
 per_task_dir = joinpath(out_dir, "per_task_summaries")
 
 files = filter(f -> endswith(f, ".csv"), readdir(per_task_dir; join=true))

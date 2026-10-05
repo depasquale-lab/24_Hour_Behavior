@@ -26,3 +26,14 @@ results/ddm_hmm_state_sweep/per_task_summaries/
 results/parameter_recovery/tasks/
 results/final_ddmhmms/ddmhmmfit_compat/
 results/final_ddmhmms/bic_comparison_results/
+results/ddm_hmm_state_sweep/cv*/*.bson
+results/ddm_hmm_state_sweep/cv*/per_task_summaries/
+results/eddm_exact*/per_rat*/
+results/eddm_exact*/cv/
+results/eddm_exact_backup1064/
+results/session_cohort/split_*/
+results/session_cohort/full_fits/
+results/tod_ddm*/per_rat/
+
+# >50MB, regenerable with `julia notebooks/eDDMExact.jl merge`
+results/eddm_exact*/eddm_trial_posteriors_by_rat.csv.gz

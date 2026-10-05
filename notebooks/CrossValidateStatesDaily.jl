@@ -15,7 +15,7 @@ Task selection (priority order); one task = one (rat, fold) pair:
   3. ARGS[1] (task id) or ARGS[1] ARGS[2] (rat idx, fold idx)
   4. none -> every rat, every fold, serially
 
-Env knobs: RAT_SET=fitted|all, K_LIST=1,2,3,4,5, N_INITS, MAX_ITER, N_FOLDS
+Env knobs: GROUP=daily|24hr, SHUFFLE=0|1, RAT_SET=fitted|all, SKIP_DONE=1|0, K_LIST=1,2,3,4,5, N_INITS, MAX_ITER, N_FOLDS
 =#
 
 using Pkg
@@ -40,19 +40,30 @@ const N_FOLDS = parse(Int, get(ENV, "N_FOLDS", "5"))
 const N_INITS = parse(Int, get(ENV, "N_INITS", "10"))
 const MAX_ITER = parse(Int, get(ENV, "MAX_ITER", "100"))
 
+# Which group: "daily" = session-based animals, "24hr" = 24 hr animals
+# (sessions are calendar days, as in FitDDMHMMs.jl).
+const GROUP = get(ENV, "GROUP", "daily")
+GROUP in ("daily", "24hr") || error("GROUP must be \"daily\" or \"24hr\", got \"$GROUP\"")
+
 # Which animals: "fitted" = the daily rats that already have K4 fits in
-# results/ddm_hmm, "all" = every animal in the daily group.
-const RAT_SET = get(ENV, "RAT_SET", "fitted")
+# results/ddm_hmm, "all" = every animal in the group. 24hr always uses "all".
+# SHUFFLE=1: permute trial order within each TRAINING session before fitting,
+# which leaves the HMM no temporal structure to learn (a mixture of DDMs).
+# Held-out sessions stay in their real order, so test logL is directly
+# comparable with the unshuffled fit on the same fold.
+const SHUFFLE = get(ENV, "SHUFFLE", "0") == "1"
+
+const RAT_SET = GROUP == "24hr" ? "all" : get(ENV, "RAT_SET", "fitted")
 const ALREADY_FIT = ["Daenerys", "Dobby", "Dory", "Regina", "Rhubarb"]
 
 Random.seed!(67)  # this seed is bussin fr fr on god
 
-# Data loading (session-based / "daily" animals only)
+# Data loading
 
 const DATA_FILE = joinpath("data", "processed_rat_data.csv.gz")
 
 rat_df = CSV.read(DATA_FILE, DataFrame)
-rat_df = rat_df[rat_df.daily .== "daily", :]   # session-based training group
+rat_df = rat_df[rat_df.daily .== (GROUP == "24hr" ? "24 hr" : "daily"), :]
 replace!(rat_df[!, :choose_right], 0 => -1)
 side_mapping = Dict("right" => 1, "left" => -1)
 DataFrames.transform!(
@@ -60,7 +71,10 @@ DataFrames.transform!(
     :correct_side => ByRow(cs -> get(side_mapping, cs, missing)) => :correct_side_numeric,
 )
 
-const DAILY_RATS = String.(unique(rat_df[!, "name"]))
+n_sessions(rat) = length(unique(split(dt)[1] for dt in rat_df.trial_datetime[rat_df.name .== rat]))
+
+# Rats with fewer sessions than folds (608840: 2 sessions) can't be split.
+const DAILY_RATS = filter(r -> n_sessions(r) >= N_FOLDS, String.(unique(rat_df[!, "name"])))
 const RATS = if RAT_SET == "all"
     DAILY_RATS
 elseif RAT_SET == "fitted"
@@ -243,13 +257,15 @@ function _resolve_jobs()
 end
 
 const JOBS = _resolve_jobs()
-@info "CV state sweep: K = $K_LIST, $N_FOLDS folds, $N_INITS inits | rats=$RATS" n_jobs = length(
+@info "CV state sweep ($GROUP): K = $K_LIST, $N_FOLDS folds, $N_INITS inits | rats=$RATS" n_jobs = length(
     JOBS
 ) threads = Threads.nthreads()
 
 # Main loop
 
-out_dir = joinpath("results", "ddm_hmm_state_sweep", "cv")
+out_dir = joinpath(
+    "results", "ddm_hmm_state_sweep", (GROUP == "24hr" ? "cv_24hr" : "cv") * (SHUFFLE ? "_shuffled" : "")
+)
 per_task_dir = joinpath(out_dir, "per_task_summaries")
 mkpath(per_task_dir)
 
@@ -269,11 +285,24 @@ summary = DataFrame(;
     test_logL_per_trial=Float64[],
 )
 
+const SKIP_DONE = get(ENV, "SKIP_DONE", "1") == "1"
+
 for (rat, fold) in JOBS
+    if SKIP_DONE && isfile(joinpath(per_task_dir, "$(rat)_fold$(fold)_cv.csv"))
+        @info "rat $rat fold $fold already done -- skipping (SKIP_DONE=0 to refit)"
+        continue
+    end
     sessions = sessions_for_rat(rat)
     train_data, train_ends, test_data, test_ends, n_tr_sess, n_te_sess = train_test_split(
         sessions; fold=fold
     )
+    if SHUFFLE
+        rng = MersenneTwister(hash((rat, fold)))
+        starts = [1; train_ends[1:(end - 1)] .+ 1]
+        for (a, b) in zip(starts, train_ends)
+            shuffle!(rng, view(train_data, a:b))
+        end
+    end
     @info "=== rat $rat, fold $fold/$N_FOLDS: $(length(train_data)) train trials ($n_tr_sess sessions) | $(length(test_data)) test trials ($n_te_sess sessions) ==="
 
     for K in K_LIST
@@ -288,7 +317,7 @@ for (rat, fold) in JOBS
         test_ll = test_loglike(hmm, test_data, test_ends)
         per_trial = test_ll / length(test_data)
 
-        @save joinpath(out_dir, "$(rat)_K$(K)_fold$(fold)_daily_cv.bson") hmm train_ll test_ll evolution rat K fold
+        @save joinpath(out_dir, "$(rat)_K$(K)_fold$(fold)_$(GROUP)_cv.bson") hmm train_ll test_ll evolution rat K fold
 
         push!(
             summary,
@@ -314,7 +343,9 @@ for (rat, fold) in JOBS
 end
 
 # Per-task summary (one file per (rat, fold), so array tasks don't clobber each other).
-if length(JOBS) == 1
+if isempty(summary)
+    @info "nothing fit in this task"
+elseif length(JOBS) == 1
     rat, fold = JOBS[1]
     CSV.write(joinpath(per_task_dir, "$(rat)_fold$(fold)_cv.csv"), summary)
     @info "Wrote per-task CV summary for $rat fold $fold"

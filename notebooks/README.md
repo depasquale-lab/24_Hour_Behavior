@@ -122,6 +122,10 @@ listed in the [cluster scripts](#cluster-scripts) table below.
 | `CrossValidateStatesDaily.jl` / `MergeStateSweepCV.jl` | Session-blocked 5-fold cross-validation over K = 1…5 for the same animals. |
 | `PlotStateSweepDaily.jl` / `PlotStateSweepCV.jl` | Plots logL/BIC against K and held-out logL against K. |
 | `CrossValidateVTied.jl`, `CompareVTiedVsFull.jl` | Compares tied-drift and full fits: held-out logL, and how the other parameters compensate when `v` is tied. |
+| `eDDMExact.jl` | Refits the per-rat eDDM by exact maximum marginal likelihood (`fit_mlddm_exact`, Gauss–Hermite quadrature), replacing the variational fit in `eDDM.jl`. Writes `results/eddm_exact/` in the same column layout; `eDDM_posthoc.jl` reads it when `fit_source = :exact`. Merge the per-rat outputs with `julia --project=notebooks notebooks/eDDMExact.jl merge`. |
+| `SessionSplitDDM.jl` | Within- vs. between-session control: fits a rat-level DDM, per-session DDMs and a K = 4 DDM-HMM on the first 80% of every session and scores the last 20%. Also fits full-data K = 4 models for the session cohort. Writes `results/session_cohort/split_<group>/`. |
+| `SessionCohortSummary.jl` | Joins all held-out results for both cohorts (DDM-HMM K = 1…5, shuffled-order mixture via `CrossValidateStatesDaily.jl` with `SHUFFLE=1`, multilevel DDM via `eDDMExact.jl cv`, within-session split), runs the paired Wilcoxon tests, and computes within-session switching from held-out Viterbi paths. Writes `results/session_cohort/`. |
+| `PlotSessionCohortFigure.jl` | Session-vs-24 h held-out fits answering the reviewer's §2.9 + §2.11 point: DDM-HMM vs multilevel DDM per rat, and held-out gain vs. K for each cohort. |
 | `PlotStateGenerality.jl`, `PlotReviewerStateStructure.jl` | Figures for the response to reviewers (see [below](#response-to-reviewers-analyses)). |
 
 ## 6. Reproducing the published figures
@@ -143,8 +147,8 @@ Illustrator and have no code counterpart.
 | | B–D (RT fit, Q–Q, accuracy) | `PopulationDDMHMM.jl` §12 | `rt_distributions_by_rat.svg`, `qq_population_rts.svg`, `acc_pred_population_rankcolored.svg` |
 | **Fig. 4** — Fit for an individual rat | A–G | `PosthocDDMHMM.jl`, with `rat = "Remy"` | `posthoc_remy_*.svg` |
 | **Fig. 5** — States across the 24-hour cycle | all | `PopulationDDMHMM.jl` §8–§10 | `population_state_occupancy.svg`, `population_enrichment.svg`, `parameter_boxswarm_by_accRank_population.svg` |
-| **Fig. 6** — Trial-to-trial RT correlations | A (parameter ACFs) | `eDDM_posthoc.jl` §4 | `eddm_trial_param_acf.svg` |
-| | B (RT ACF vs. both models) | `eDDM_posthoc.jl` §5–§6 | `eddm_rt_acf.svg`, `eddm_rt_acf_ppc.svg` |
+| **Fig. 6** — Trial-to-trial RT correlations | A (parameter ACFs) | `eDDM_posthoc.jl` §4 (fits from `eDDMExact.jl`) | `eddm_exact/eddm_trial_param_acf.svg` |
+| | B (RT ACF vs. both models) | `eDDM_posthoc.jl` §5–§6 | `eddm_exact/eddm_rt_acf.svg`, `eddm_exact/eddm_rt_acf_ppc.svg` |
 | **Fig. 7** — Short-timescale fluctuations | A, B (RT distributions) | `Rat_Daily.jl` §5, §4 | plotted inline |
 | | C (posterior decoding) | `Rat_Daily.jl` §3 | plotted inline |
 | | D (population ACF) | `Rat_Daily.jl` §2 | `rat_daily_acf_ppc.svg` |
@@ -162,7 +166,7 @@ Illustrator and have no code counterpart.
 | **SF7** — DDM parameter regressions | `PopulationDDMHMM.jl` §6–§7 | `beta_forest_population.svg`, `beta_forest_population_rt.svg` |
 | **SF8** — BIC model comparison | `PlotConstrainedBIC.jl`, fed by `FitOneRat.jl` → `MergeBicSummaries.jl` <!-- REVIEW: confirm the constrained refits are what feed SF8. MergeBicSummaries writes results/final_ddmhmms/bic_summary.csv, but PlotConstrainedBIC reads results/bic_summary.csv. --> | `bic_heatmap_from_full.svg`, `bic_change_from_full_bar.svg`, `bic_winners.csv` |
 | **SF9** — Drift rate under high contrast | *not in this repository* — the contrast-manipulation DDMs were fit with the [`rddm`](https://github.com/gkane26/rddm) R package (QMPE), as described in the paper's Methods | — |
-| **SF10** — Parameter learning in a multi-level DDM | `eDDM_posthoc.jl` §2–§3 | `eddm_elbo_history_by_rat.svg`, `eddm_hyperparams_by_rat.svg` |
+| **SF10** — Parameter learning in a multi-level DDM | `eDDM_posthoc.jl` §2–§3 | `eddm_exact/eddm_elbo_history_by_rat.svg` (fit summary for exact fits), `eddm_exact/eddm_hyperparams_by_rat.svg` |
 | **SF11** — DDM-HMM and GLM-HMM find similar dynamics | `ModelCompFigure.jl` §4–§6 | `model_comparison_lift_heatmap.eps`, `group_null_hist.eps`, `zscores_by_animal.eps` |
 | **SF12** — GLM-HMM states align with task structure | from the GLM-HMM fits (`GLM_HMM.jl`) | plotted inline |
 | **SF13** — GLM-HMM state structure in an expert rat | `ModelCompFigure.jl` §7 | `null_1065.eps`, `null_Draco.eps`, `logp_by_animal.eps` |
@@ -175,7 +179,7 @@ All output paths below are relative to `results/`.
 
 | Figure | Panels | Produced by | Output files |
 |---|---|---|---|
-| **SF?** — Parameter recovery | A–D true vs. recovered v, B, a₀, τ · E self-transitions · F example session · G state decoding · H within-rat ordering (Kendall τ) · I error vs. dataset size | `ParameterRecovery.jl` → `PlotParameterRecovery.jl` | `parameter_recovery/parameter_recovery.svg`, `recovery_long.csv`, `recovery_summary.csv` |
+| **SF?** — Parameter recovery | A–D true vs. recovered v, B, a₀, τ · E self-transitions · F example session · G state decoding · H error-scaling exponent vs. 1/√n · I error vs. dataset size with fitted power laws | `ParameterRecovery.jl` → `PlotParameterRecovery.jl` | `parameter_recovery/parameter_recovery.svg`, `recovery_long.csv`, `recovery_summary.csv`, `recovery_scaling.csv` |
 | **SF?** — States are comparable across animals | A drift vs. accuracy rank · B Kendall τ per parameter · C accuracy vs. v·B | `ExtractStateParameters.jl` → `PlotStateComparability.jl` | `final_ddmhmms/state_comparability.svg` |
 | **SF?** — State-conditioned behavior | A psychometric functions · B mean RT by rank · C psychometric slope by rank | `ExtractStateParameters.jl` → `PlotStateBehavior.jl` | `final_ddmhmms/state_behavior.svg` |
 | **SF?** — States predict trial initiation | A P(state \| ITI) by decile · B ITI by rank · C trial rate by rank · D P(break > 5 min) by rank · E engagement over a work bout · F specificity control | `ExtractStateParameters.jl` → `StateEngagementITI.jl` → `PlotStateEngagementITI.jl` | `final_ddmhmms/state_engagement_iti.svg`, `state_engagement_*.csv`, `state_bout_profile.csv` |
@@ -203,8 +207,8 @@ transparency, but none of them is a manuscript figure.
 
 | Script | Question it answers | Output |
 |---|---|---|
-| `PlotStateGenerality.jl` | Do the states recur across animals? States are matched on DDM parameters alone. Includes leave-one-animal-out rank assignment against a shuffle null. | `final_ddmhmms/reviewer_state_generality.svg` |
-| `PlotReviewerStateStructure.jl` | Can PCA, k-means or consensus alignment recover a cross-animal state taxonomy without using accuracy? | `final_ddmhmms/reviewer_state_structure.svg` |
+| `PlotStateGenerality.jl` | Main reviewer figure on matching states across animals: schematic; every route (label-free PCA, label-free consensus, held-out template matching, non-decision time, occupancy, psychometric slope) agrees with accuracy rank in 16-17/18 animals, absolute-parameter control 7/18; PCA of all 72 states on absolute vs within-animal parameters with a post hoc accuracy axis (R² 0.37 vs 0.70); within-animal PC1 vs accuracy rank. | `final_ddmhmms/reviewer_state_generality.svg` |
+| `PlotReviewerStateStructure.jl` | Can PCA, k-means or consensus alignment recover a cross-animal state taxonomy without using accuracy? Compares population vs. within-animal normalisation: rank structure appears only when each animal is z-scored on its own. | `final_ddmhmms/reviewer_state_structure.svg` |
 | `CrossValidateVTied.jl` | Held-out logL for full vs. tied-drift fits. | `ddm_hmm_constrained/cv_*_fold*.csv` |
 | `CompareVTiedVsFull.jl` | When drift is tied across states, how do the other parameters compensate? | `ddm_hmm_constrained/v_tied_compensation/` |
 | `DirectGradientDDMHMM.jl` | Single-rat check of the direct-gradient fitter. | `ddm_hmm_constrained/direct_gradient_<rat>/` |
@@ -229,6 +233,11 @@ original cluster, so edit that line and the `#$ -P` project before running
 | `run_stateSweepDaily_array.sh` | `StateSweepDaily.jl` | daily rats |
 | `run_crossValidateStatesDaily_array.sh` | `CrossValidateStatesDaily.jl` | rat × fold |
 | `run_crossValidateVTied_array.sh` | `CrossValidateVTied.jl` | rats |
+| `run_eDDMExact_array.sh` | `eDDMExact.jl` | rats |
+| `run_eDDMExactDaily_array.sh` | `eDDMExact.jl` (`GROUP=daily`) | session rats |
+| `run_eDDMExactCV_{24hr,daily}_array.sh` | `eDDMExact.jl cv` | rat × fold |
+| `run_cvShuffled_{24hr,daily}_array.sh` | `CrossValidateStatesDaily.jl` (`SHUFFLE=1`, K = 4) | rat × fold |
+| `run_sessionSplit_{24hr,daily}_array.sh` | `SessionSplitDDM.jl` | rats |
 
 After an array job finishes, run the matching `Merge*.jl` script to combine the
 per-task outputs.
@@ -258,7 +267,7 @@ CrossValidationLoop.jl   # state-count selection; writes results/
    +-- PosthocDDMHMM.jl      -> Fig. 4, SF6
    +-- PopulationDDMHMM.jl   -> Fig. 3B-D, Fig. 5, SF5, SF7
    +-- ModelCompFigure.jl    -> SF11, SF13
-   +-- eDDM_posthoc.jl       -> Fig. 6, SF10   (requires eDDM.jl first)
+   +-- eDDM_posthoc.jl       -> Fig. 6, SF10   (requires eDDMExact.jl first)
    +-- Rat_Daily.jl          -> Fig. 7
    +-- PlotConstrainedBIC.jl -> SF8
    +-- MiscFigures.jl        -> Fig. 1D, 1E

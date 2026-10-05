@@ -6,8 +6,10 @@ Figure for the animal-matched DDM-HMM parameter recovery (ParameterRecovery.jl).
   E    true vs recovered self-transition probability
   F    example synthetic session: true state vs recovered posterior
   G    per-trial state decoding: recovered model vs the true generative model
-  H    within-rat ordering of each parameter preserved (Kendall τ, true vs recovered)
-  I    recovery error against dataset size, with the real animals' sizes marked
+  H    how fast recovery error shrinks with data: within-rat power-law exponent
+       per parameter, with a rat-bootstrap 95% CI, against the 1/√n rate
+  I    recovery error against dataset size with the fitted power laws, and the
+       real animals' sizes marked
 
 Also writes recovery_long.csv (one row per task × state × parameter) and
 recovery_summary.csv (one row per task).
@@ -22,6 +24,7 @@ using DataFrames
 using Statistics
 using StatsBase
 using Printf
+using Random
 using Plots
 using StatsPlots
 using Plots.PlotMeasures
@@ -259,43 +262,13 @@ annotate!(
     ),
 )
 
-# Panel H: within-rat ordering preserved (Kendall τ between true and recovered)
+# Within-rat ordering (Kendall τ between true and recovered), console summary only.
 τrows = DataFrame()
 for g in groupby(full, [:rat, :rep, :param])
     push!(τrows, (param=g.param[1], tau=corkendall(g.truth, g.recovered)))
 end
 hparams = ["v", "B", "a0", "tau", "p_self"]
 hlabels = ["v", "B", "a0", "τ", "p(stay)"]
-pH = plot(;
-    ylabel="Kendall τ (true, recovered)",
-    title="within-rat state ordering",
-    legend=false,
-    xticks=(1:length(hparams), hlabels),
-    ylims=(-1.05, 1.1),
-    xlims=(0.4, length(hparams) + 0.6),
-)
-hline!(pH, [0]; color=:gray70, lw=1)
-for (i, p) in enumerate(hparams)
-    vals = τrows.tau[τrows.param .== p]
-    # Kendall τ on 4 states takes few values, so jitter horizontally.
-    jit = 0.25 .* (rand(length(vals)) .- 0.5)
-    scatter!(
-        pH,
-        i .+ jit,
-        vals;
-        color=:gray40,
-        markersize=2.5,
-        markerstrokewidth=0,
-        alpha=0.6,
-    )
-    plot!(pH, [i - 0.3, i + 0.3], fill(median(vals), 2); color=:black, lw=2.5)
-    annotate!(
-        pH,
-        i,
-        1.07,
-        text(@sprintf("%d/%d", count(==(1.0), vals), length(vals)), 7, :center),
-    )
-end
 
 # Panel I: error vs dataset size.
 # Error in each state is scaled by the spread of that parameter across the rat's
@@ -304,10 +277,63 @@ end
 spread = combine(groupby(long, [:rat, :rep, :frac, :param]), :truth => std => :spread)
 lj = leftjoin(long, spread; on=[:rat, :rep, :frac, :param])
 lj.scaled_err = abs.(lj.recovered .- lj.truth) ./ lj.spread
+param_colors = Dict(
+    "v" => palette(:tab10)[1],
+    "B" => palette(:tab10)[2],
+    "a0" => palette(:tab10)[3],
+    "tau" => palette(:tab10)[4],
+)
 err = combine(
     groupby(lj, [:rat, :rep, :frac, :n_trials, :param]),
     :scaled_err => median => :err,
 )
+err = err[err.err .> 0, :]
+
+# Panel H: error scaling with dataset size.
+# Within-rat power law log10(err) = α_rat + β·log10(n). A rat's truth is fixed across
+# its subsamples, so the rat intercept absorbs how separable its states are and β is
+# the data-size effect alone. β = −0.5 is the 1/√n rate of a consistent estimator.
+err.logn = log10.(err.n_trials)
+err.logerr = log10.(err.err)
+transform!(
+    groupby(err, [:rat, :rep, :param]),
+    :logn => (x -> x .- mean(x)) => :dx,
+    :logerr => (y -> y .- mean(y)) => :dy,
+)
+within_slope(d) = sum(d.dx .* d.dy) / sum(d.dx .^ 2)
+
+rng_boot = MersenneTwister(1)
+N_BOOT = 2000
+scaling = DataFrame()
+for p in hparams
+    sub = err[err.param .== p, :]
+    β = within_slope(sub)
+    # α such that the fitted line passes through the rats' average (logn, logerr)
+    α = mean(combine(groupby(sub, :rat), [:logn, :logerr] => ((x, y) -> mean(y) - β * mean(x)) => :a).a)
+    by_rat = [g for g in groupby(sub, :rat)]
+    boots = [within_slope(reduce(vcat, rand(rng_boot, by_rat, length(by_rat)))) for _ in 1:N_BOOT]
+    lo, hi = quantile(boots, (0.025, 0.975))
+    push!(scaling, (param=p, beta=β, lo=lo, hi=hi, alpha=α, n_rats=length(by_rat)))
+end
+CSV.write(joinpath(out_dir, "recovery_scaling.csv"), scaling)
+
+pH = plot(;
+    ylabel="error scaling exponent β",
+    title="error scaling with data",
+    legend=false,
+    xticks=(1:length(hparams), hlabels),
+    xlims=(0.4, length(hparams) + 0.6),
+    ylims=(-1.0, 0.15),
+)
+hline!(pH, [0.0]; color=:gray70, lw=1)
+hline!(pH, [-0.5]; color=:gray40, ls=:dash, lw=1)
+annotate!(pH, 0.45, -0.46, text("1/√n", 7, :left, :gray30))
+for (i, r) in enumerate(eachrow(scaling))
+    c = r.param == "p_self" ? :gray30 : param_colors[r.param]
+    plot!(pH, [i, i], [r.lo, r.hi]; color=c, lw=2.5)
+    scatter!(pH, [i], [r.beta]; color=c, markersize=6, markerstrokewidth=0)
+    annotate!(pH, i, r.hi + 0.07, text(@sprintf("%.2f", r.beta), 7, :center))
+end
 pI = plot(;
     xlabel="trials in synthetic dataset",
     ylabel="median |error| / between-state SD",
@@ -316,12 +342,6 @@ pI = plot(;
     yscale=:log10,
     legend=:topright,
     xticks=([1e3, 1e4, 1e5], ["1k", "10k", "100k"]),
-)
-param_colors = Dict(
-    "v" => palette(:tab10)[1],
-    "B" => palette(:tab10)[2],
-    "a0" => palette(:tab10)[3],
-    "tau" => palette(:tab10)[4],
 )
 for p in ("v", "B", "a0", "tau")
     sub = err[err.param .== p, :]
@@ -335,16 +355,11 @@ for p in ("v", "B", "a0", "tau")
         alpha=0.35,
         label="",
     )
-    # Binned median trend.
-    edges = 10 .^ range(log10(minimum(sub.n_trials)), log10(maximum(sub.n_trials)); length=7)
-    xs, ys = Float64[], Float64[]
-    for i in 1:(length(edges) - 1)
-        m = (sub.n_trials .>= edges[i]) .& (sub.n_trials .<= edges[i + 1])
-        count(m) >= 3 || continue
-        push!(xs, sqrt(edges[i] * edges[i + 1]))
-        push!(ys, median(sub.err[m]))
-    end
-    plot!(pI, xs, ys; color=param_colors[p], lw=2, label=hlabels[findfirst(==(p), hparams)])
+    # Fitted within-rat power law (panel H).
+    r = scaling[scaling.param .== p, :][1, :]
+    xs = 10 .^ range(minimum(sub.logn), maximum(sub.logn); length=50)
+    plot!(pI, xs, 10 .^ (r.alpha .+ r.beta .* log10.(xs)); color=param_colors[p], lw=2,
+        label=hlabels[findfirst(==(p), hparams)])
 end
 hline!(pI, [1.0]; color=:gray50, ls=:dash, lw=1, label="")
 # Real animals' dataset sizes as a rug.
@@ -354,6 +369,12 @@ for n in real_n
     plot!(pI, [n, n], [yl[1], yl[1] * 1.25]; color=:black, lw=1, label="")
 end
 annotate!(pI, minimum(real_n), yl[1] * 1.45, text("real rats", 7, :left))
+
+# Panel letters, prepended to each title and left-aligned.
+for (pp, L) in zip((pA, pB, pC, pD, pE, pF, pG, pH, pI), 'A':'I')
+    t = pp.subplots[1].attr[:title]
+    plot!(pp; title="$(L)    $(t)", titlelocation=:left)
+end
 
 fig = plot(
     pA,
@@ -385,6 +406,9 @@ for p in hparams
         count(==(1.0), τrows.tau[τrows.param .== p]),
         count(τrows.param .== p),
     )
+end
+for r in eachrow(scaling)
+    @printf("%-7s error ∝ n^%.2f  (95%% CI %.2f to %.2f, %d rats)\n", r.param, r.beta, r.lo, r.hi, r.n_rats)
 end
 @printf(
     "decoding: recovered median %.3f, oracle median %.3f\n",

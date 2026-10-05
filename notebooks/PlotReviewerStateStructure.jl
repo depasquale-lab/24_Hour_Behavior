@@ -5,11 +5,14 @@ Not intended for the manuscript. It documents what unsupervised analyses of the
 fitted DDM parameters do and do not recover, in support of the accuracy-based
 state labelling.
 
-  A  variance explained by each principal component of the within-animal state
-     structure, against how often that component orders the states consistently
-  B  k-means clustering of all 72 states: how many distinct clusters each
+  A  PCA of all 72 states under three normalisations: z-scored across the
+     population, centred within animal (pooled SD), and z-scored within animal,
+     coloured by accuracy rank
+  B  per normalisation: leave-one-animal-out nearest-template rank recovery
+     against a shuffle null, and animals whose PC1 orders states by accuracy
+  C  k-means clustering of all 72 states: how many distinct clusters each
      animal's four states occupy
-  C  unsupervised consensus alignment (never uses accuracy) against the
+  D  unsupervised consensus alignment (never uses accuracy) against the
      accuracy-based labelling
 
 Input is `state_parameters_long.csv` from ExtractStateParameters.jl.
@@ -70,23 +73,24 @@ sort!(df, [:rat, :state])
 FEATS = [:logB, :logv, :logτ, :absbias]
 X = Matrix{Float64}(df[!, FEATS])
 
-# Centre each animal on its own mean so the analysis describes within-animal state
-# structure rather than between-animal parameter offsets, then scale by the pooled
-# standard deviation so no parameter dominates by units alone.
+# Three normalisations of the same states. Population: each parameter z-scored
+# over all 72 states. Centred: each animal centred on its own mean, then scaled
+# by the pooled SD (k-means below uses this). Within-animal z: each animal's
+# states centred and scaled by that animal's own SD, i.e. relative structure only.
+Xp = (X .- mean(X; dims=1)) ./ std(X; dims=1)
 Xw = copy(X)
+Xz = copy(X)
 for rat in rats
     m = df.rat .== rat
     Xw[m, :] .-= mean(Xw[m, :]; dims=1)
+    Xz[m, :] = (X[m, :] .- mean(X[m, :]; dims=1)) ./ (std(X[m, :]; dims=1) .+ 1e-9)
 end
 Xw ./= std(X; dims=1)
-
-# Panel A: variance explained against cross-animal conservation
-
-E = eigen(Symmetric(cov(Xw)))
-ord = sortperm(E.values; rev=true)
-eigvals, eigvecs = E.values[ord], E.vectors[:, ord]
-varexp = eigvals ./ sum(eigvals)
-scores = Xw * eigvecs
+NORMS = [
+    ("z-scored across population", Xp),
+    ("centred within animal", Xw),
+    ("z-scored within animal", Xz),
+]
 
 "Exact two-sided binomial test of `k` successes in `n` trials against p = 0.5."
 function sign_test_p(k::Int, n::Int)
@@ -95,73 +99,90 @@ function sign_test_p(k::Int, n::Int)
     return min(1.0, 2 * sum(binomial(n, i) for i in k:n) / 2.0^n)
 end
 
-"Conventional significance stars: *** < .001, ** < .01, * < .05, otherwise n.s."
-function stars(p::Float64)
-    p < 0.001 && return "***"
-    p < 0.01 && return "**"
-    p < 0.05 && return "*"
-    return "n.s."
+"Principal component scores and variance explained."
+function pca_scores(Z)
+    E = eigen(Symmetric(cov(Z)))
+    ord = sortperm(E.values; rev=true)
+    return (Z .- mean(Z; dims=1)) * E.vectors[:, ord], E.values[ord] ./ sum(E.values)
 end
 
-# Animals whose τ is exactly zero show no ordering and carry no directional
-# information, so they are excluded from the denominator rather than counted
-# against the effect.
-pc_k, pc_n, pc_p = Int[], Int[], Float64[]
-for i in 1:length(FEATS)
-    ts = [
-        corkendall(Float64.(df[df.rat .== r, :acc_rank]), scores[df.rat .== r, i]) for
-        r in rats
-    ]
+"""
+Hold out each animal, average the other animals' states by rank into K templates,
+and give each held-out state the rank of its nearest template.
+"""
+function loo_nearest(Z, ranks)
+    hits = 0
+    for h in rats
+        tr = df.rat .!= h
+        T = reduce(vcat, [mean(Z[tr .& (ranks .== k), :]; dims=1) for k in 1:K])
+        for i in findall(df.rat .== h)
+            hits += argmin([sum((Z[i, :] .- T[k, :]) .^ 2) for k in 1:K]) == ranks[i]
+        end
+    end
+    return hits / length(ranks)
+end
+
+function shuffled_ranks()
+    r = copy(df.acc_rank)
+    for rat in rats
+        m = findall(df.rat .== rat)
+        r[m] = shuffle(r[m])
+    end
+    return r
+end
+
+const NNULL = 2000
+null_ranks = [shuffled_ranks() for _ in 1:NNULL]
+
+# Panel A / B statistics. Animals whose τ is exactly zero show no ordering and
+# carry no directional information, so they are excluded from the sign test.
+norm_stats = map(NORMS) do (name, Z)
+    S, ve = pca_scores(Z)
+    ts = [corkendall(Float64.(df[df.rat .== r, :acc_rank]), S[df.rat .== r, 1]) for r in rats]
     npos, nneg = count(>(0), ts), count(<(0), ts)
-    k, n = max(npos, nneg), npos + nneg
-    push!(pc_k, k); push!(pc_n, n); push!(pc_p, sign_test_p(k, n))
-end
-pc_consistency = pc_k
-
-pretty_feat = Dict(:logB => "log B", :logv => "log v", :logτ => "log τ", :absbias => "|bias|")
-pc_names = [
-    "PC$i\n($(pretty_feat[FEATS[argmax(abs.(eigvecs[:, i]))]]))" for i in 1:length(FEATS)
-]
-xs = repeat(1:length(FEATS); outer=2)
-grp = repeat(["variance explained", "animals ordered consistently"]; inner=length(FEATS))
-ys = vcat(100 .* varexp, 100 .* pc_k ./ pc_n)
-
-pA = groupedbar(
-    xs,
-    ys;
-    group=grp,
-    bar_position=:dodge,
-    fillalpha=0.75,
-    linecolor=:black,
-    color=[:steelblue :gray60],   # groups are ordered alphabetically by `group`
-    title="A",
-    titlelocation=:left,
-    titlefontsize=12,
-    xlabel="principal component (dominant loading)",
-    ylabel="percent",
-    xticks=(1:length(FEATS), pc_names),
-    ylims=(0, 148),
-    legend=:topleft,
-    foreground_color_legend=nothing,
-    background_color_legend=nothing,
-)
-# Chance for a majority sign among n non-tied animals sits above 50%; use the
-# median non-tied n across components for the reference line.
-nref = Int(round(median(pc_n)))
-chance = 100 * mean([
-    let s = sum(rand((-1, 1), nref) .> 0)
-        max(s, nref - s)
-    end for _ in 1:20000
-]) / nref
-hline!(pA, [chance]; color=:black, linestyle=:dash, linewidth=0.8, label="")
-annotate!(pA, 4.48, chance + 4, text("chance", 6, FONT_FAMILY, :right, :gray35))
-for i in 1:length(FEATS)
-    annotate!(
-        pA, i, 120,
-        text("$(pc_k[i])/$(pc_n[i]) $(stars(pc_p[i]))", 6, FONT_FAMILY, :center, :gray25),
+    loo = loo_nearest(Z, df.acc_rank)
+    null = [loo_nearest(Z, r) for r in null_ranks]
+    (;
+        name, S, ve,
+        pc1_k=max(npos, nneg), pc1_n=npos + nneg, pc1_p=sign_test_p(max(npos, nneg), npos + nneg),
+        loo, null, loo_p=(1 + count(>=(loo), null)) / (NNULL + 1),
     )
 end
-# Panel B: does k-means recover a four-state taxonomy?
+
+rank_colors = [:firebrick, :orange, :mediumseagreen, :royalblue]
+pA = map(enumerate(norm_stats)) do (j, ns)
+    p = plot(;
+        title=(j == 1 ? "A  " : "") * ns.name, titlelocation=:left, titlefontsize=9,
+        xlabel=@sprintf("PC1 (%.0f%%)", 100 * ns.ve[1]),
+        ylabel=@sprintf("PC2 (%.0f%%)", 100 * ns.ve[2]),
+        legend=j == 1 ? :topright : false, legendtitle="accuracy rank",
+        legendtitlefontsize=7, foreground_color_legend=nothing, background_color_legend=nothing,
+    )
+    for k in 1:K
+        m = df.acc_rank .== k
+        scatter!(p, ns.S[m, 1], ns.S[m, 2]; color=rank_colors[k], marker=(:circle, 4, stroke(0)), alpha=0.85, label=string(k))
+    end
+    return p
+end
+
+pstr(p) = p <= 1 / (NNULL + 1) ? @sprintf("p < %.4f", 1 / (NNULL + 1)) : @sprintf("p = %.3f", p)
+short = ["population", "centred", "within-\nanimal z"]
+pD = plot(;
+    title="B  relative structure recovers rank", titlelocation=:left, titlefontsize=12,
+    ylabel="% states given the correct rank\n(held-out animal, nearest template)",
+    xticks=(1:3, short), xlims=(0.4, 3.6), ylims=(0, 80), legend=false,
+)
+hline!(pD, [25]; color=:gray40, linestyle=:dot, linewidth=1)
+annotate!(pD, 3.55, 27.5, text("chance", 6, FONT_FAMILY, :right, :gray35))
+annotate!(pD, 3.55, 3, text("*animals with τ = 0 excluded", 6, FONT_FAMILY, :right, :gray35))
+for (x, ns) in enumerate(norm_stats)
+    violin!(pD, fill(x, NNULL), 100 .* ns.null; color=:gray80, linewidth=0)
+    scatter!(pD, [x], [100 * ns.loo]; color=:black, marker=(:diamond, 7, stroke(0)))
+    annotate!(pD, x, 100 * ns.loo + 5, text(@sprintf("%.0f%%, %s", 100 * ns.loo, pstr(ns.loo_p)), 7, FONT_FAMILY, :center, :black))
+    annotate!(pD, x, 73, text("PC1 orders\n$(ns.pc1_k)/$(ns.pc1_n) animals*", 6, FONT_FAMILY, :center, :gray25))
+end
+
+# Panel C: does k-means recover a four-state taxonomy?
 
 "Lloyd's algorithm with random restarts; returns the best labelling found."
 function kmeans_best(Z::Matrix{Float64}, k::Int; restarts::Int=500, iters::Int=100)
@@ -202,7 +223,7 @@ pB = bar(
     linecolor=:black,
     color=:indianred,
     legend=false,
-    title="B",
+    title="C",
     titlelocation=:left,
     titlefontsize=12,
     xlabel="distinct clusters occupied by an animal's 4 states",
@@ -226,15 +247,11 @@ annotate!(
     ),
 )
 
-# Panel C: unsupervised consensus alignment against the accuracy labelling
+# Panel D: unsupervised consensus alignment against the accuracy labelling
 
-# Per-animal z-scored state profiles; alignment is over all K! relabellings, which
+# Within-animal z-scored state profiles; alignment is over all K! relabellings, which
 # is exhaustive for K = 4 and so needs no assignment heuristic.
-P = Dict{eltype(rats),Matrix{Float64}}()
-for r in rats
-    Z = Xw[df.rat .== r, :]
-    P[r] = (Z .- mean(Z; dims=1)) ./ (std(Z; dims=1) .+ 1e-9)
-end
+P = Dict(r => Xz[df.rat .== r, :] for r in rats)
 "All permutations of 1:n (matches the helper in CompareVTiedVsFull.jl)."
 function all_permutations(n::Int)
     n == 1 && return [[1]]
@@ -339,7 +356,7 @@ pC = heatmap(
     M;
     color=:Blues,
     clims=(0, maximum(M)),
-    title="C",
+    title="D",
     titlelocation=:left,
     titlefontsize=12,
     xlabel="rank from unsupervised consensus",
@@ -369,24 +386,23 @@ annotate!(
 )
 
 fig = plot(
-    pA, pB, pC;
-    layout=@layout([a{0.36w} b{0.32w} c{0.32w}]),
-    size=(1050, 350),
-    left_margin=6Plots.mm,
+    pA..., pD, pB, pC;
+    layout=@layout([a b c; d e f]),
+    size=(1100, 720),
+    left_margin=7Plots.mm,
     bottom_margin=8Plots.mm,
-    top_margin=8Plots.mm,
+    top_margin=5Plots.mm,
 )
 savefig_both(fig, joinpath(results_dir, "reviewer_state_structure"))
 
-println("\nPCA of within-animal state structure")
-for i in 1:length(FEATS)
-    j = argmax(abs.(eigvecs[:, i]))
+println("\nPCA and held-out rank recovery by normalisation (chance 25%)")
+for ns in norm_stats
     @printf(
-        "  PC%d  %4.1f%% var   consistent %2d/%-2d animals (p = %.4f)   dominant loading %s\n",
-        i, 100 * varexp[i], pc_k[i], pc_n[i], pc_p[i], String(FEATS[j])
+        "  %-28s PC1 %4.1f%% var   orders %2d/%-2d animals (p = %.4f)   held-out %2.0f%%  null %2.0f%% ± %.0f%%  %s\n",
+        ns.name, 100 * ns.ve[1], ns.pc1_k, ns.pc1_n, ns.pc1_p,
+        100 * ns.loo, 100 * mean(ns.null), 100 * std(ns.null), pstr(ns.loo_p)
     )
 end
-@printf("  chance level for consistency ≈ %.0f%% (n = %d non-tied)\n", chance, nref)
 
 @printf("\nk-means (k=%d): cluster sizes %s\n", K, join(sort(cluster_sizes; rev=true), "/"))
 for j in 1:K
