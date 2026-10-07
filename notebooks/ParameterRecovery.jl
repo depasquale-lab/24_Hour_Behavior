@@ -1,28 +1,19 @@
 #=
-Parameter recovery for the K=4 DDM-HMM, with ground truth matched to the animals.
+Parameter recovery for the K=4 DDM-HMM with animal-matched ground truth.
 
-Each synthetic dataset is a clone of one rat's final fitted model
-(results/final_ddmhmms/final_ddmhmms), generated with that rat's session lengths and
-its real sequence of correct sides. The clone is then refit blind with the same
-pipeline used for the real data: 20 random initialisations from
-`generate_ddmhmm_initialization`, Baum–Welch with nothing tied (TiedPriorHMM), each
-then polished by L-BFGS on the marginal likelihood as in DirectGradientDDMHMM.jl, and
-the best final logL kept. The truth is used only afterwards, to align recovered state labels with true
-ones.
+Each synthetic dataset clones one rat's final fit (results/final_ddmhmms/final_ddmhmms)
+with that rat's session lengths and real correct-side sequence, then is refit
+blind with the real-data pipeline: 20 random inits, Baum–Welch (nothing tied),
+L-BFGS polish on the marginal likelihood, best logL kept. The truth is used only
+to align state labels afterwards. Choice and RT are sampled by inverse CDF from
+the same WFPT density the fitter uses, so only the estimator is tested.
 
-Trials are sampled exactly: choice and RT are drawn by inverse CDF from the same
-WFPT density the fitter evaluates, so the test isolates the estimator rather than
-simulator discretisation error.
-
-Tasks (one per SGE array index; see `TASKS` below):
+Tasks (one per SGE array index; see TASKS):
   full   every rat, all sessions
-  scale  every rat × session fractions (0.1, 0.25, 0.5), 1 replicate
+  scale  every rat × session fractions (0.1, 0.25, 0.5)
+Each task also runs one fit started at the truth, as a local-optimum diagnostic.
 
-Each task also runs one extra fit initialised at the true parameters. It is not
-used as the estimate; comparing its logL with the best blind fit tells us whether a
-poor recovery is a local optimum or the likelihood genuinely preferring other values.
-
-Output: one BSON file per task in results/parameter_recovery/tasks, merged by
+Output: one BSON per task in results/parameter_recovery/tasks, merged by
 PlotParameterRecovery.jl.
 =#
 
@@ -193,13 +184,9 @@ function stimulus_sessions(rat::AbstractString)
     return [Int.(sub.correct_side_numeric[dates .== d]) for d in sort(unique(dates))]
 end
 
-# Fitting: the real-data pipeline, applied to synthetic observations.
-#
-# Each initialisation runs Baum–Welch exactly as in FitConstrainedDDMHMMs.jl, then
-# is polished by L-BFGS directly on the marginal log-likelihood (the approach of
-# DirectGradientDDMHMM.jl, which produced several of the final fits). Baum–Welch
-# alone often stops at its 100-iteration cap before converging, so the polished
-# estimate is the one reported; the Baum–Welch-only estimate is kept for comparison.
+# Fitting: Baum–Welch as in FitConstrainedDDMHMMs.jl, then L-BFGS polish as in
+# DirectGradientDDMHMM.jl. Baum–Welch often hits its 100-iteration cap, so the
+# polished estimate is reported; the Baum–Welch-only one is kept for comparison.
 function run_bw(prior, obs, seq_ends)
     hmm_est, evol = HiddenMarkovModels.baum_welch(
         TiedPriorHMM(prior, Symbol[]),

@@ -1,23 +1,17 @@
 #=
-State-conditioned behaviour, computed from posterior state assignments rather
-than from the fitted DDM parameters.
+State-conditioned behaviour from posterior state assignments.
 
-Three panels:
   A  psychometric functions, P(choose right) against signed evidence
-  B  mean reaction time against accuracy rank, one line per rat
+  B  mean RT against accuracy rank, one line per rat
   C  psychometric slope against accuracy rank, one line per rat
 
-Note on the missing chronometric function. The task is free response: a flash is
-drawn every 100 ms until the animal commits, so the realized flash difference is
-an outcome measured at the moment of response, not an exogenous difficulty level
-(it correlates with RT at r = 0.80). Plotting RT against |Δ flashes| therefore
-produces a positive slope by construction and does not describe the animal's
-speed-accuracy policy. Difficulty lives in the generative Bernoulli probability,
-which is not recorded per trial, so panel B reports the RT of each state
-directly instead.
+No chronometric function: the task is free response (a flash every 100 ms until
+the animal commits), so |Δ flashes| is an outcome of RT (r = 0.80), not a
+difficulty level, and RT vs |Δ flashes| is positive by construction. The
+generative Bernoulli probability is not recorded per trial, so B reports RT by state.
 
-Inputs are `state_psychometric_long.csv`, `state_parameters_long.csv` and
-`state_psychometric_slopes.csv` from ExtractStateParameters.jl.
+Inputs: state_psychometric_long.csv, state_parameters_long.csv and
+state_psychometric_slopes.csv from ExtractStateParameters.jl.
 =#
 
 using Pkg
@@ -63,8 +57,7 @@ rats = sort(unique(params.rat))
 const K = 4
 const NRAT = length(rats)
 
-# Rank states 1..4 within each rat by posterior-weighted accuracy, best = rank 1,
-# then carry that labelling onto the behavioural tables.
+# Accuracy rank within rat (1 = best), carried onto the behavioural tables.
 transform!(groupby(params, :rat), :acc => (a -> ordinalrank(a; rev=true)) => :acc_rank)
 key = Dict((r, s) => k for (r, s, k) in zip(params.rat, params.state, params.acc_rank))
 for tbl in (psy, slopes)

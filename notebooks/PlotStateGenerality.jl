@@ -1,33 +1,26 @@
 #=
-Response-to-reviewers figure: how states are matched across animals, and how well
-the accuracy-ranked states align.
+How states are matched across animals, how well the accuracy-ranked states
+align, and whether a data-driven matching does better.
 
-Addresses (R1) "was one animal's State 2 the same as another's?" and (R2) how
-states are matched across animals, how well they align, and whether a more
-data-driven approach than sorting on accuracy would do better. States are ranked
-1..4 within each animal by posterior-weighted accuracy. Every test below works on
-each state's DDM parameter profile (log v, log B, log τ, |a0 - 0.5|) z-scored
-within its animal; accuracy only supplies the labels being compared.
+States are ranked 1..4 within animal by posterior-weighted accuracy. Every test
+works on each state's parameter profile (log v, log B, log τ, |a0 - 0.5|)
+z-scored within animal; accuracy only supplies the labels being compared.
 
-  A  flow chart of the matching and each analysis (with the absolute-parameter
-     control), and Ai-Aiv worked examples on real animals: ranking by accuracy,
-     the parameter profile, held-out matching and label-free consensus
-  B  per-animal rank correlation with accuracy for every route, each against its
-     own shuffle null: label-free PCA axis, label-free consensus, held-out
-     template matching, non-decision time alone, occupancy, psychometric slope,
-     and PCA on absolute (population-scaled) parameters. Median with bootstrap
-     CI over animals, beside the count of animals agreeing / tied / opposed
+  A  flow chart of the matching, with worked examples Ai-Aiv on real animals
+  B  per-animal rank agreement with accuracy for every route (label-free PCA,
+     label-free consensus, held-out template matching, τ alone, occupancy,
+     psychometric slope, absolute-parameter PCA), each against its own shuffle
+     null; median with bootstrap CI, plus animals agreeing / tied / opposed
   C  PCA of all 72 states on absolute (population-scaled) parameters
-  D  PCA of all 72 states on within-animal z-scored parameters
-     (C, D: arrow = within-animal accuracy regressed on PC1/PC2 after the PCA)
+  D  PCA on within-animal z-scored parameters (C, D: arrow = accuracy regressed
+     on PC1/PC2 after the PCA)
   E  PC1 of D against accuracy rank, one line per animal
 
-PC1's sign is fixed by its log v loading, never by accuracy. Consensus slots are
-named by the single global relabelling that best matches accuracy, and its null
-gets the same advantage.
+PC1's sign is fixed by its log v loading. Consensus slots are named by the
+global relabelling that best matches accuracy; its null gets the same advantage.
 
-Input is `state_parameters_long.csv` from ExtractStateParameters.jl and
-`state_psychometric_slopes.csv` from PlotStateBehavior.jl.
+Inputs: state_parameters_long.csv (ExtractStateParameters.jl),
+state_psychometric_slopes.csv (PlotStateBehavior.jl).
 =#
 
 using Pkg
@@ -89,17 +82,14 @@ sort!(df, [:rat, :acc_rank])
 
 FEATS = [:logv, :logB, :logτ, :absbias]
 
-# Each animal's four states z-scored within that animal, so matching is on the
-# shape of the state structure and not on between-animal parameter offsets.
-# Rows are in accuracy-rank order because df is sorted that way.
+# Within-animal z-scored profiles (rows in accuracy-rank order).
 P = Dict{String,Matrix{Float64}}()
 for r in rats
     Z = Matrix{Float64}(df[df.rat .== r, FEATS])
     P[r] = (Z .- mean(Z; dims=1)) ./ (std(Z; dims=1) .+ 1e-9)
 end
 
-# The alternative: each parameter z-scored once over all 72 states, so absolute
-# parameter values (and between-animal offsets) are kept.
+# Population-scaled alternative: keeps between-animal offsets.
 Xall = Matrix{Float64}(df[!, FEATS])
 Xpop = (Xall .- mean(Xall; dims=1)) ./ std(Xall; dims=1)
 Ppop = Dict(r => Xpop[df.rat .== r, :] for r in rats)
@@ -163,8 +153,7 @@ function best_perm(X, Y)
     return best
 end
 
-# Pairwise assignments depend only on the profiles, so compute them once; the
-# shuffle null only relabels which rank each matched state carries.
+# Pairwise assignments depend only on the profiles; the shuffle null only relabels ranks.
 const PAIR_PERMS = Dict((a, b) => best_perm(P[a], P[b]) for a in rats, b in rats if a != b)
 
 """
@@ -252,12 +241,9 @@ pair_null, pair_null1 = first.(pair_nulls), last.(pair_nulls)
 p_pair = (1 + count(>=(pair_exact), pair_null)) / (NNULL + 1)
 p_pair1 = (1 + count(>=(pair_within1), pair_null1)) / (NNULL + 1)
 
-# Normalisation statistics (panels B-D): the same held-out matching on
-# population-scaled parameters, and PCA of all 72 states under each scaling.
-# Two matching rules. One-to-one forces an animal's four states onto four
-# different ranks, which is itself a within-animal comparison; nearest gives each
-# state the rank of its closest template independently, so only the scaling
-# decides how much of the rank is recoverable.
+# Normalisation statistics (panels B-D): held-out matching and PCA under each
+# scaling. One-to-one matching is itself within-animal; nearest-template is not,
+# so only the scaling decides what is recoverable.
 "Held-out exact rate when each state takes the rank of its nearest template."
 function loo_nearest(lab; Pm=P)
     hits = 0
@@ -303,12 +289,10 @@ function sign_test_p(k::Int, n::Int)
 end
 p_sign(τs) = sign_test_p(count(>(0), τs), count(!=(0), τs))
 
-# Null for any fixed ordering compared with accuracy: median over animals of the
-# Kendall τ between a random ordering of 4 states and the accuracy ordering.
+# Null for any fixed ordering: median over animals of τ(random order, accuracy).
 simple_τnull = [median([corkendall(Float64.(shuffle(1:K)), Float64.(1:K)) for _ in rats]) for _ in 1:NNULL]
 
-# Label-free consensus alignment: relabel every animal's states onto a shared
-# template by alternating relabelling and template updates, never using accuracy.
+# Label-free consensus: alternate relabelling and template updates; never uses accuracy.
 function consensus_alignment(Pm; restarts=400)
     best, best_cost = nothing, Inf
     for _ in 1:restarts
@@ -345,8 +329,7 @@ C_cons ./= NRAT
 cons_exact = mean(cons_rank[r][i] == i for r in rats for i in 1:K)
 cons_within1 = mean(abs(cons_rank[r][i] - i) <= 1 for r in rats for i in 1:K)
 τ_cons = [corkendall(Float64.(cons_rank[r]), Float64.(1:K)) for r in rats]
-# The global slot naming is chosen to match accuracy, so the null gets the same
-# advantage: random per-animal labellings, named by the best global relabelling.
+# Slots are named to match accuracy, so the null gets the same advantage.
 cons_nulls = map(1:NNULL) do _
     cr = name_slots(Dict(r => shuffle(collect(1:K)) for r in rats))
     (mean(cr[r][i] == i for r in rats for i in 1:K), median([corkendall(Float64.(cr[r]), Float64.(1:K)) for r in rats]),
@@ -384,8 +367,7 @@ km = kmeans_best(Xwz, K)
 km_span = [length(unique(km[df.rat .== r])) for r in rats]
 km_sizes = sort([count(==(c), km) for c in 1:K]; rev=true)
 
-# Panel H statistics: agreement between the accuracy ordering and orderings by
-# other state properties, all oriented so larger = better state.
+# Orderings by other state properties vs accuracy, oriented so larger = better.
 criteria = [
     (:vB, "v·B"),
     (:v, "v"),
@@ -400,8 +382,7 @@ for (j, (f, lab)) in enumerate(criteria), r in rats
     push!(agree, (lab, j, r, corkendall(Float64.(rk), Float64.(sub.acc_rank)), count(rk .== sub.acc_rank)))
 end
 
-# Converging-evidence rows (panel B): per-animal agreement of each ordering with
-# accuracy, oriented so positive = agrees, each against its own null.
+# Panel B rows: each ordering vs accuracy, positive = agrees, each with its own null.
 crit_τ(lab) = agree[agree.crit .== lab, :τ]
 evidence = [
     ("PCA, within-animal parameters (PC1)", τ_wz, simple_τnull),
@@ -457,9 +438,8 @@ plot!(pA, [4.3, 4.6, 4.6], [0.06, 0.06, 0.0]; color=:gray30, linewidth=0.9)
 plot!(pA, [4.6, 9.1], [0.0, 0.0]; color=:gray30, linewidth=0.9)
 arr!(pA, 9.1, 0.0, 9.1, 0.285)
 
-# A (lower row): worked example of each step on real animals.
-# Example animal: held-out and consensus labels both match accuracy, accuracies
-# well separated, HMM numbering not already in accuracy order.
+# A (lower row): worked examples. Chosen so held-out and consensus labels match
+# accuracy and the HMM numbering is not already in accuracy order.
 ex = "Robert"
 # Consensus examples: two other animals whose consensus labels match accuracy.
 cons_examples = ["1064", "1054"]
@@ -547,9 +527,8 @@ for (b, r) in enumerate(cons_examples)
 end
 annotate!(a4, 7.5, 1.9, text("shared template", 6, FONT_FAMILY, :center, :black))
 
-# B: every analysis on one metric. Left: median per-animal τ with a bootstrap 95%
-# CI over animals, against the 95% range of medians under shuffled labels. Right:
-# how many animals' orderings agree with, tie with, or oppose accuracy.
+# B: left, median per-animal τ with bootstrap 95% CI vs the shuffled-label range;
+# right, animals agreeing / tied / opposed.
 nr = length(evidence)
 rowy = [nr + 1 - j for j in 1:nr]
 boot_ci(τs; n=NNULL) = quantile([median(rand(τs, length(τs))) for _ in 1:n], (0.025, 0.975))
@@ -608,8 +587,7 @@ function pca_panel(pc, ttl; leg=false)
         m = df.acc_rank .== k
         scatter!(p, pc.S[m, 1], pc.S[m, 2]; color=rank_colors[k], marker=(:circle, 3.5, stroke(0)), alpha=0.85, label=string(k))
     end
-    # Accuracy axis, fitted after the PCA: within-animal z-scored accuracy
-    # regressed on PC1 and PC2, drawn as a biplot arrow through the centroid.
+    # Accuracy regressed on PC1/PC2 after the PCA, drawn as a biplot arrow.
     Xs = pc.S[:, 1:2]
     b = Xs \ acc_wz
     R2 = 1 - sum((acc_wz .- Xs * b) .^ 2) / sum(acc_wz .^ 2)
@@ -649,7 +627,7 @@ fig = plot(
     bottom_margin=7Plots.mm,
     top_margin=5Plots.mm,
 )
-savefig_both(fig, joinpath(results_dir, "reviewer_state_generality"))
+savefig_both(fig, joinpath(results_dir, "state_generality"))
 
 # Console summary
 
@@ -701,4 +679,4 @@ for (j, (f, lab)) in enumerate(criteria)
         replace(lab, "\n" => " "), median(s.τ), count(>(0), s.τ), NRAT, 100 * sum(s.exact) / (K * NRAT)
     )
 end
-println("\nFigure written to $(joinpath(results_dir, "reviewer_state_generality"))")
+println("\nFigure written to $(joinpath(results_dir, "state_generality"))")

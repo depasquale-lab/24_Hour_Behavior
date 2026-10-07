@@ -11,8 +11,7 @@ using DataFrames
 using Statistics
 using BSON: @save
 
-# Pull Optim / StatsAPI / ForwardDiff through DriftDiffusionModels so we don't
-# have to add them as direct deps of the notebooks environment.
+# Reuse DriftDiffusionModels' deps rather than adding them to the environment.
 const Optim = DriftDiffusionModels.Optim
 const StatsAPI = DriftDiffusionModels.StatsAPI
 
@@ -29,17 +28,10 @@ end
 const N_ITERS = 10
 const K_STATES = 4
 
-# Configurations of DDM parameters to tie (share one value across all states).
-# Each entry is the set of parameters held constant across states; the rest
-# vary per state. We pick combinations that correspond to interpretable
-# hypotheses about where state-dependence lives.
-#
-#   Symbol[]        full model (baseline; everything varies by state)
-#   [:τ]            motor/non-decision time is animal-level, not state-level
-#   [:a₀]           side bias is animal-level, not state-level
-#   [:τ, :a₀]       both "nuisance" params shared; states differ only in drift & boundary
-#   [:v]            drift rate shared (tests whether drift needs to vary)
-#   [:B]            boundary shared (tests whether caution needs to vary)
+# Parameters tied (shared across states); the rest vary per state.
+#   Symbol[]   full model
+#   [:τ], [:a₀], [:τ, :a₀]   nuisance params animal-level
+#   [:v], [:B]               does drift / caution need to vary?
 const TIED_CONFIGS = [Symbol[], [:τ], [:a₀], [:τ, :a₀], [:v], [:B]]
 
 Random.seed!(67)
@@ -106,8 +98,7 @@ function generate_ddmhmm_initialization(n_states::Int)
     return PriorHMM(init_init, trans_init, emissions_init, 1, 1)
 end
 
-# TiedPriorHMM: PriorHMM variant whose emission M-step jointly optimizes
-# per-state free DDM parameters + any parameters tied across states.
+# TiedPriorHMM: PriorHMM whose emission M-step also fits the tied parameters.
 const DDM_PARAMS = (:B, :v, :a₀, :τ)
 const DDM_BOUNDS = Dict(
     :B => (0.001, 50.0), :v => (0.0, 10.0), :a₀ => (0.0, 1.0), :τ => (1e-3, 5.0)
@@ -162,11 +153,7 @@ function StatsAPI.fit!(
     tied = hmm.tied
     free = Symbol[p for p in DDM_PARAMS if !(p in tied)]
 
-    # Unconstrained reparameterization: optimize in y-space where
-    #   B, v, τ > 0   →  y = log(x),   x = exp(y)
-    #   a₀ ∈ (0, 1)   →  y = logit(x), x = σ(y)
-    # Drops Fminbox (and its inner/outer barrier iterations) — plain LBFGS
-    # on an unconstrained problem is ~5-10× faster.
+    # Unconstrained y-space (log for B, v, τ; logit for a₀): plain LBFGS, ~5-10× faster than Fminbox.
     logit(p) = log(p / (1 - p))
     sigmoid(y) = 1 / (1 + exp(-y))
     to_y(p::Symbol, x) = p == :a₀ ? logit(clamp(x, 1e-6, 1 - 1e-6)) : log(max(x, 1e-9))
@@ -190,8 +177,7 @@ function StatsAPI.fit!(
 
     nfree = length(free)
 
-    # Precompute flat-vector indices for each (state, DDM parameter) so the
-    # inner loop doesn't pay a per-trial findfirst.
+    # Flat-vector index per (state, parameter), precomputed.
     param_idx = Matrix{Int}(undef, K, length(DDM_PARAMS))
     for (pi, p) in enumerate(DDM_PARAMS)
         if p in tied

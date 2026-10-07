@@ -1,30 +1,18 @@
 #=
 External validation of the K = 4 tied-full DDM-HMM states against trial
-initiation, a behaviour the model never saw.
+initiation. The fits see only (RT, choice, correct side), so ITI and trial rate
+are out-of-model predictions of the posterior.
 
-The fits are conditioned on (reaction time, choice, correct side) only. The time
-the animal takes to start the next trial, and the rate at which it produces
-trials, are therefore held-out variables: any relation between them and the
-trial-by-trial state posterior is an out-of-model prediction, not a restatement
-of the likelihood.
+Timing: `init_time[t]` is the latency after trial t, before trial t+1
+(gap[t] = init_time[t] + rt[t+1] + c, c ≈ 5.8 s hardware overhead). So
+    iti_pre[t]  = init_time[t-1]   wait before this trial
+    iti_post[t] = init_time[t]     wait before the next one
+Analyses use session-interior trials only, where both are defined. A session is
+one calendar day, the HMM's sequence unit.
 
-Timing convention in the source table, verified against `trial_datetime`:
-`init_time[t]` is the latency the animal took *after* trial t, before committing
-to trial t+1. The wall-clock gap between consecutive trials satisfies
-    gap[t] = init_time[t] + rt[t+1] + c,   c ≈ 5.8 s (1st-99th pct 3.4-10 s),
-so `init_time` is the behavioural part of the inter-trial interval and `c` is
-fixed hardware overhead. We therefore define, for each trial t,
-    iti_pre[t]  = init_time[t-1]   the wait the animal took before this trial
-    iti_post[t] = init_time[t]     the wait it will take before the next one
-and restrict every analysis to session-interior trials, where both are defined.
-A session is one calendar day, the same sequence unit the HMM was fit with, so
-no interval ever spans a sequence boundary.
-
-Writes four tables to results/final_ddmhmms, the inputs to
-PlotStateEngagementITI.jl:
-
+Writes to results/final_ddmhmms (inputs to PlotStateEngagementITI.jl):
   state_engagement_summary.csv   rat x state: posterior-weighted ITI and trial rate
-  state_engagement_deciles.csv   rat x rank x ITI decile: mean posterior, P(state | ITI)
+  state_engagement_deciles.csv   rat x rank x ITI decile: P(state | ITI)
   state_engagement_stats.csv     rat-level correlations and AUC with a circular-shift null
   state_bout_profile.csv         rat x rank x position in a work bout
 =#
@@ -41,7 +29,7 @@ using HiddenMarkovModels
 
 Random.seed!(20260915)
 
-# --- struct stubs so BSON can rehydrate all three saved schemas ---
+# Struct stubs so BSON can rehydrate all three saved schemas
 struct ConstrainedDDMHMMFit
     hmm::Any
     tied::Vector{Symbol}
@@ -135,16 +123,12 @@ _gamma(ret) = ret isa AbstractMatrix ? ret :
               ret isa Tuple ? _gamma(ret[1]) :
               hasproperty(ret, :γ) ? getfield(ret, :γ) : error("no γ")
 
-# --- analysis constants ---
+# Analysis constants
 const PAUSE_S = 300.0   # a break of more than five minutes ends a work bout
 const RATE_W = 5        # half-width, in trials, of the local trial-rate window
 const BOUT_MIN = 20     # shortest bout entering the bout-position profile
 const BOUT_POS = 10     # positions resolved from each end of a bout
-const NPERM = 10_000    # circular shifts per rat; the p resolution floor is
-                        # 1/(NPERM+1), which must sit well below any
-                        # multiple-comparison threshold. At NPERM = 500 the floor
-                        # was 2.0e-3, above Bonferroni's 0.05/54 = 9.3e-4, so no
-                        # test could have passed Holm regardless of effect size.
+const NPERM = 10_000    # circular shifts per rat; p floor 1/(NPERM+1) must sit below 0.05/54
 const NDEC = 10         # ITI quantile bins
 
 const DATA_FILE = joinpath("data", "processed_rat_data.csv.gz")
@@ -265,8 +249,7 @@ end
 fitdir = joinpath("results", "final_ddmhmms", "final_ddmhmms")
 files = sort(filter(f -> endswith(f, ".bson"), readdir(fitdir)))
 
-# Accuracy ranking of each animal's states, the labelling used throughout the
-# paper, so ranks can be pooled across animals.
+# Accuracy rank of each animal's states, the paper-wide labelling.
 params = CSV.read(joinpath("results", "final_ddmhmms", "state_parameters_long.csv"), DataFrame)
 transform!(groupby(params, :rat), :acc => (a -> ordinalrank(a; rev=true)) => :acc_rank)
 rank_of = Dict((String(r), s) => k for (r, s, k) in zip(params.rat, params.state, params.acc_rank))
@@ -296,8 +279,7 @@ for f in files
         local_rate!(rate, tsec, rng)
     end
 
-    # Session-interior trials, where the wait before and the wait after are both
-    # observed and belong to the same sequence.
+    # Session-interior trials: both waits observed, same sequence.
     core = findall(t -> isfinite(iti_pre[t]) && isfinite(iti_post[t]), 1:T)
     incore = falses(T); incore[core] .= true
     lpre = log10.(max.(iti_pre[core], 0.01))
@@ -305,20 +287,17 @@ for f in files
     g = γ[:, core]
     ranks = [rank_of[(rat, k)] for k in 1:Ks]
 
-    # Expected accuracy rank, a scalar engagement read-out of the posterior:
-    # 1 when the animal is certainly in its best state, K when in its worst.
+    # Expected accuracy rank: 1 = certainly best state, K = certainly worst.
     erank = vec(sum(ranks .* g; dims=1))
 
-    # Rank transforms, shared by the observed statistics and the shift null: a
-    # circular shift permutes a rank vector, so Spearman correlations and the
-    # Mann-Whitney AUC reduce to cheap operations on these.
+    # Rank transforms: a circular shift permutes ranks, so Spearman and AUC are cheap.
     r_erank = tiedrank(erank)
     r_pre = tiedrank(lpre)
     r_post = tiedrank(lpost)
     r_rate = tiedrank(rate[core])
     rho_state = [cor(tiedrank(g[k, :]), r_pre) for k in 1:Ks]
 
-    # --- per-state summary -------------------------------------------------
+    # Per-state summary
     for k in 1:Ks
         w = g[k, :]
         push!(summary_rows, (
@@ -335,7 +314,7 @@ for f in files
         ); promote=true)
     end
 
-    # --- P(state | ITI decile): the reverse conditional ---------------------
+    # P(state | ITI decile): the reverse conditional
     edges = quantile(lpre, range(0, 1; length=NDEC + 1))
     bin = clamp.(searchsortedlast.(Ref(edges[2:(end - 1)]), lpre) .+ 1, 1, NDEC)
     for b in 1:NDEC
@@ -349,11 +328,8 @@ for f in files
         end
     end
 
-    # --- correlations and AUC against a within-session circular-shift null ---
-    # Posteriors and ITIs are both strongly autocorrelated, so a trial-level p
-    # value under independence is meaningless. Shifting the state trajectory
-    # within a session keeps both autocorrelations and breaks only the
-    # alignment between them.
+    # Correlations and AUC against a within-session circular-shift null
+    # Both series are autocorrelated; the shift keeps that and breaks only alignment.
     blocks = UnitRange{Int}[]
     let pos = 1
         for rng in sessions
@@ -389,9 +365,7 @@ for f in files
 
     z(o, nl) = (o - mean(nl)) / max(std(nl), 1e-12)
 
-    # Two-sided against the shift null, centred on the null mean rather than on
-    # zero: the circular-shift null is not centred at zero for every animal, so
-    # |observed| would be the wrong statistic.
+    # Two-sided, centred on the null mean (the shift null is not centred at zero).
     pv(o, nl) = (1 + count(>=(abs(o - mean(nl))), abs.(nl .- mean(nl)))) / (NPERM + 1)
 
     push!(stat_rows, (
@@ -410,9 +384,7 @@ for f in files
         frac_pause=n1 / nc,
     ); promote=true)
 
-    # --- state occupancy along a work bout ----------------------------------
-    # Bouts are runs of trials separated by a pause longer than PAUSE_S. The
-    # boundaries come from the ITI alone, so this profile is a pure prediction.
+    # State occupancy along a work bout (bouts split by pauses > PAUSE_S)
     bsum = zeros(Ks, 2, BOUT_POS)      # state x (start, end) x position
     bcnt = zeros(Int, Ks, 2, BOUT_POS)
     nbout = 0
@@ -442,10 +414,7 @@ for f in files
             rat, nc, obs_pre, mean(null_pre), z(obs_pre, null_pre), obs_auc)
 end
 
-# --- multiple-comparison correction --------------------------------------
-# The figure makes three claims, each replicated independently in every animal,
-# so the family is all 3 x n_rats two-sided tests pooled. Correcting within a
-# single measure would be less conservative and harder to justify.
+# Multiple-comparison correction: family = 3 measures x n_rats tests
 const FDR_FIELDS = [:rho_pre_p, :rho_rate_p, :rho_pre_withinhour_p]
 
 "Benjamini-Hochberg step-up q-values."

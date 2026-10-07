@@ -1,17 +1,9 @@
 #=
-State-number sweep for the session-based ("daily") trained animals.
+State-number sweep for the session-based ("daily") animals: K = 1, 2, ... fits
+with full-data logL, AIC and BIC. Fitting setup matches FitDDMHMMs.jl /
+FitConstrainedDDMHMMs.jl (Baum-Welch, N_INITS restarts, best wins).
 
-Fits the DDM-HMM with K = 1, 2, ... states for one animal (or all of them) and
-records the full-data log-likelihood, AIC and BIC so the LL-vs-K curve can be
-plotted. Mirrors the fitting setup in FitDDMHMMs.jl / FitConstrainedDDMHMMs.jl
-(Baum-Welch, N_INITS random restarts, best restart wins) so the numbers are
-comparable to the existing K = 4 fits.
-
-Rat selection follows the same convention as FitOneRat.jl / CrossValidateVTied.jl:
-  1. $SGE_TASK_ID   (UGE array job, 1-based index into DAILY_RATS)
-  2. $RAT_IDX       (manual override, 1-based)
-  3. ARGS[1] as int
-  4. none -> loop over every daily rat
+Rat selection: $SGE_TASK_ID, then $RAT_IDX, then ARGS[1]; none -> every daily rat.
 =#
 
 using Pkg

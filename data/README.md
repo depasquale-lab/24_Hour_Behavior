@@ -116,11 +116,11 @@ Derived summary tables and intermediate outputs.
 | `eddm_elbo_history_by_rat.csv` | ELBO optimization trace per animal. Columns: `rat_name`, `iter`, `elbo`. |
 | `best_gammas2.jld2` | Best-fit posterior state responsibilities (γ), stored as a [JLD2](https://github.com/JuliaIO/JLD2.jl) file. |
 
-Added in revision. Scripts are listed in [`notebooks/README.md`](../notebooks/README.md#added-in-revision).
+Scripts are listed in [`notebooks/README.md`](../notebooks/README.md#analysis-scripts).
 
 | Path | Description |
 |------|-------------|
-| `final_ddmhmms/final_ddmhmms/` | Final K = 4 tied-full DDM-HMM fits, one BSON per 24-hour animal (18). All the revision analyses read these. |
+| `final_ddmhmms/final_ddmhmms/` | Final K = 4 tied-full DDM-HMM fits, one BSON per 24-hour animal (18). All the analysis scripts read these. |
 | `final_ddmhmms/ddmhmmfit_compat/` | The same fits, re-saved in the `ddmhmms/` compatibility format. |
 | `final_ddmhmms/state_parameters_long.csv` | One row per rat × state. Columns: `rat`, `state`, DDM parameters `B`, `v`, `a0`, `tau`, `occupancy`, self-transition `p_self`, expected `dwell` (trials), posterior-weighted `acc`, `rt_mean`, `rt_sd`, `p_right`, `abs_df`, `init_time`, and the rat's `n_trials` and `logL`. |
 | `final_ddmhmms/state_{psychometric,chronometric,transitions}_long.csv`, `state_psychometric_slopes.csv` | Per-state psychometric and chronometric curves, transition matrices and psychometric slopes, written by `ExtractStateParameters.jl`. |

@@ -5,11 +5,7 @@ include(joinpath(@__DIR__, "FitConstrainedDDMHMMs.jl"))
 
 using BSON: @save
 
-# Pick which rat this task should fit.
-# Source of rat_idx (in priority order):
-#   1. $SGE_TASK_ID  (UGE/SGE array job)
-#   2. $RAT_IDX      (manual override, 1-based)
-#   3. first CLI arg (e.g. `julia FitOneRat.jl 3`)
+# rat_idx: $SGE_TASK_ID, then $RAT_IDX, then ARGS[1].
 
 function _resolve_rat_idx()
     for k in ("SGE_TASK_ID", "RAT_IDX")
@@ -70,8 +66,7 @@ for tied in TIED_CONFIGS
     @info "  logL=$(round(fit.logL; digits=2))  k=$(fit.n_free_params)  BIC=$(round(fit.bic; digits=2))  →  $filename"
 end
 
-# Write a per-task summary. Merge these into `bic_summary.csv` after all
-# tasks complete with notebooks/MergeBicSummaries.jl (small helper below).
+# Per-task summary; MergeBicSummaries.jl combines them into bic_summary.csv.
 per_task_dir = joinpath(results_dir, "per_task_summaries")
 isdir(per_task_dir) || mkpath(per_task_dir)
 CSV.write(joinpath(per_task_dir, "$(THIS_RAT)_K$(K_STATES).csv"), summary_rows)

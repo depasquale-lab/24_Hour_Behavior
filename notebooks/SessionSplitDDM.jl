@@ -1,26 +1,19 @@
 #=
-Within-session vs. between-session control.
+Within-session vs. between-session control. Each session is split in time:
+first TRAIN_FRAC of trials train, the rest are held out.
 
-Each session is split in time: the first TRAIN_FRAC of its trials are training
-data, the rest are held out. Four models are fit on the training parts and
-scored on the held-out ends:
-
-  ddm          one DDM per rat (all sessions pooled)
-  session_ddm  one DDM per session, all 4 parameters free
+  ddm              one DDM per rat (sessions pooled)
+  session_ddm      one DDM per session, all 4 parameters free
   session_ddm_tau  one DDM per session, τ fixed at the rat-level value
-  hmm          K-state DDM-HMM on the per-session training parts; the held-out
-               end is scored conditional on its own session's start,
-               logL(full session) - logL(training part)
+  hmm              K-state DDM-HMM on the training parts; held-out end scored
+                   conditional on its session's start
 
-If the DDM-HMM beats the per-session DDMs, the HMM's gain is not just
-"sessions differ from each other": it predicts how behavior changes within a
-session. Sessions shorter than MIN_TRIALS are dropped for every model.
+If the HMM beats the per-session DDMs, its gain is within-session, not just
+"sessions differ". Sessions shorter than MIN_TRIALS are dropped.
 
-Task selection: $SGE_TASK_ID or ARGS[1] = 1-based rat index; none -> every rat.
-`julia notebooks/SessionSplitDDM.jl merge` stitches the per-rat CSVs.
-
-Daily group only (FULL_FIT=1, default): also fits the K-state DDM-HMM on all of
-the rat's data, to OUT_DIR/full_fits/.
+Task: $SGE_TASK_ID or ARGS[1] = rat index; none -> every rat. `merge` stitches
+the per-rat CSVs. FULL_FIT=1 (daily default) also fits the K-state DDM-HMM on
+all of the rat's data, to OUT_DIR/full_fits/.
 
 Env knobs: GROUP (daily | 24hr), K (4), N_INITS (10), MAX_ITER (100),
 TRAIN_FRAC (0.8), MIN_TRIALS (50), FULL_FIT (1 for daily, 0 for 24hr)

@@ -29,10 +29,7 @@ function savefig_both(p, stem::AbstractString)
     savefig(p, stem * ".svg")
 end
 
-#=
-Types that must exist in scope so BSON can reconstruct the saved fits.
-Mirrors the definitions in FitConstrainedDDMHMMs.jl.
-=#
+# Struct stubs so BSON can rehydrate the fits (as in FitConstrainedDDMHMMs.jl).
 
 struct ConstrainedDDMHMMFit
     hmm::Any
@@ -345,7 +342,7 @@ param_labels = Dict(
     :τ => "τ (non-decision)",
 )
 
-# ---- Plot 1: distribution of std_ratio per parameter across rats ----
+# Plot 1: distribution of std_ratio per parameter across rats
 rank_tbl_param = [findfirst(==(p), param_order) for p in spread_rows.parameter]
 
 p_std = boxplot(
@@ -370,7 +367,7 @@ dotplot!(
 hline!(p_std, [1.0]; color=:black, linestyle=:dash, linewidth=1)
 savefig_both(p_std, joinpath(out_dir, "between_state_std_ratio"))
 
-# ---- Plot 2: mean absolute relative delta per parameter across rats ----
+# Plot 2: mean absolute relative delta per parameter across rats
 rank_tbl_param2 = [findfirst(==(p), param_order) for p in rank_rows.parameter]
 p_delta = boxplot(
     rank_tbl_param2,
@@ -393,7 +390,7 @@ dotplot!(
 )
 savefig_both(p_delta, joinpath(out_dir, "mean_abs_rel_delta"))
 
-# ---- Plot 3: per-rat per-state scatter: full vs tied for each parameter ----
+# Plot 3: per-rat per-state scatter: full vs tied for each parameter
 for p in param_order
     sub = per_state_rows[per_state_rows.parameter .== p, :]
     isempty(sub) && continue

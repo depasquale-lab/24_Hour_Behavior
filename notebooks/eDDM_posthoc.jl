@@ -38,10 +38,7 @@ end
 md"""
 # eDDM posthoc
 
-Posthoc diagnostics for the per-rat eDDM (extended DDM) fits stored under
-`../results/`. Shows ELBO convergence, group-level hyperparameters,
-trial-parameter autocorrelation, RT autocorrelation, and an RT-ACF posterior
-predictive from simulated symmetric DDMs.
+Diagnostics for the per-rat eDDM fits under `../results/`.
 
 | § | Section |
 |---|---------|
@@ -84,7 +81,7 @@ end
 md"""
 ## §2 ELBO history
 
-ELBO trace per rat (rebased to its minimum) to confirm convergence.
+ELBO trace per rat, rebased to its minimum.
 """
 
 # ╔═╡ dade0006-0000-4000-8000-000000000006
@@ -143,8 +140,7 @@ end
 md"""
 ## §4 Trial-parameter ACFs
 
-Per-rat ACFs of the posterior-mean trial parameters (B, τ, v, a0), then
-averaged across rats with ±1.96 SEM ribbons.
+ACFs of the posterior-mean trial parameters, averaged across rats (±1.96 SEM).
 """
 
 # ╔═╡ dade001b-0000-4000-8000-00000000001b
@@ -257,8 +253,7 @@ end
 md"""
 ## §6 RT-ACF posterior predictive
 
-Simulate a symmetric DDM per rat using the fitted group-mean parameters and
-compare its population mean RT-ACF against the empirical RT-ACF from §5.
+Symmetric DDM simulated per rat from the group-mean parameters, RT-ACF vs §5.
 """
 
 # ╔═╡ dade0012-0000-4000-8000-000000000012

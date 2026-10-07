@@ -1,14 +1,10 @@
 #=
-Reviewer figure: DDM parameters across the day, DDM-HMM vs time-of-day DDM.
+DDM parameters across the day, DDM-HMM vs time-of-day DDM.
+  Row 1  one example rat: HMM hourly mean with 10–90 % range, and the time-of-day curve
+  Row 2  all rats, each curve centred on its daily mean (shapes compared, not
+         levels), in units of the rat's HMM trial-level SD; mean ± SEM
 
-  Row 1  one example rat: HMM hourly mean with 10–90 % range across trials, and
-         the time-of-day DDM curve
-  Row 2  all rats: each curve centred on its own daily mean (a single DDM fit to
-         state-mixed data sits at different parameter levels, so shapes are
-         compared), in units of the rat's HMM trial-level SD; mean ± SEM across rats
-
-Reads the outputs of TimeOfDayParameterCurves.jl. Writes
-results/tod_ddm_vary_tau/param_curves.{png,svg}.
+Reads TimeOfDayParameterCurves.jl outputs. Writes results/tod_ddm_vary_tau/param_curves.{png,svg}.
 =#
 
 using Pkg

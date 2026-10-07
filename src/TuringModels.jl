@@ -1,8 +1,6 @@
 export GLMObs, BernoulliGLM, glmhmm, simple_ar_model
 
-###############
-#GLM-HMM model#
-###############
+# GLM-HMM model
 struct GLMObs{Tx<:AbstractVector}
     x::Tx          # augmented covariate vector (includes intercept at index 1)
     y::Int         # 0/1

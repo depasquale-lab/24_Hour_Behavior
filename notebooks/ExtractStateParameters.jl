@@ -1,12 +1,9 @@
 #=
-Extract per-rat, per-state DDM parameters and posterior-weighted behaviour from
-the final K=4 tied-full DDM-HMM fits.
-
-Writes `state_parameters_long.csv` (one row per rat × state) plus the
-state-conditioned psychometric and chronometric curves and psychometric slopes,
-which are the inputs to PlotStateComparability.jl and PlotStateBehavior.jl. The three saved BSON schemas in results/final_ddmhmms
-(direct-gradient θ, constrained Baum–Welch `fit`, and the "rich" constrained form)
-are all handled here so the fits do not need to be re-run or re-converted.
+Per-rat, per-state DDM parameters and posterior-weighted behaviour from the
+final K=4 tied-full fits. Writes state_parameters_long.csv (rat × state) plus
+state-conditioned psychometric/chronometric curves and psychometric slopes, the
+inputs to PlotStateComparability.jl and PlotStateBehavior.jl. Handles all three
+BSON schemas in results/final_ddmhmms, so nothing needs re-running.
 =#
 
 using Pkg
@@ -18,7 +15,7 @@ using BSON: @load
 using DriftDiffusionModels
 using HiddenMarkovModels
 
-# --- struct stubs so BSON can rehydrate all three saved schemas ---
+# Struct stubs so BSON can rehydrate all three saved schemas
 struct ConstrainedDDMHMMFit
     hmm::Any
     tied::Vector{Symbol}
@@ -138,9 +135,7 @@ function load_fit(path::AbstractString)
     end
 end
 
-# Evidence bins for the state-conditioned psychometric / chronometric curves.
-# Signed bins for the psychometric, folded bins for the chronometric. Edges are
-# fixed across animals so the curves can be averaged bin-by-bin.
+# Evidence bins (signed for psychometric, folded for chronometric), fixed across animals.
 const PSY_EDGES = [-Inf, -16.0, -11.0, -7.0, -4.0, -1.5, 1.5, 4.0, 7.0, 11.0, 16.0, Inf]
 const CHR_EDGES = [0.0, 1.5, 4.0, 7.0, 11.0, 16.0, Inf]
 
@@ -238,9 +233,7 @@ for f in files
             push!(transrows, (rat=rat, from=k, to=j, p=A[k, j]); promote=true)
         end
 
-        # State-conditioned psychometric curve: P(choose right) against signed
-        # evidence, with each trial weighted by its posterior probability of
-        # belonging to this state.
+        # Psychometric curve, trials weighted by posterior state probability.
         for b in 1:(length(PSY_EDGES) - 1)
             m = psybin .== b
             any(m) || continue

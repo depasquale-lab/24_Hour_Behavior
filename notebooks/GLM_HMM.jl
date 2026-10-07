@@ -21,7 +21,7 @@ end
 md"# Data Preparation"
 
 # ╔═╡ 3facbe41-bd8a-49d7-ad36-f5f9f132c4e2
-md"This cell loads the data, selects a specific rat, then separates out the trials of the animal by day. We assume each day is an independent sequence of trials."
+md"Load the data, pick one rat, split its trials by day (one independent sequence per day)."
 
 # ╔═╡ 52615e7d-58a5-492b-8220-d09d91ffbada
 begin
@@ -36,27 +36,21 @@ begin
     rat_of_interest = rat_df[rat_df.name .== rat, :]
     dates = [Date(split(dt)[1]) for dt in rat_of_interest.trial_datetime]
 
-    # Get unique dates in chronological order
     unique_dates = sort(unique(dates))
 
-    # Create a vector of vectors, where each inner vector contains DDMResults for one day
     resp_var = Vector{Matrix{Float64}}()
     dep_var = Vector{Matrix{Float64}}()
 
     for date in unique_dates
-        # Get indices for this date
         day_indices = findall(dates .== date)
 
-        # Skip days with no valid data
         if isempty(day_indices)
             continue
         end
 
-        # Extract RTs and outcomes for this date
         day_resp = reshape(rat_of_interest.choose_right[day_indices], 1, :)
         day_dep = reshape(rat_of_interest.delta_flashes[day_indices], 1, :)
 
-        # Add to our vectors
         push!(resp_var, day_resp)
         push!(dep_var, day_dep)
     end

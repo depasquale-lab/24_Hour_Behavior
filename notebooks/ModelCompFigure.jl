@@ -142,10 +142,8 @@ md"""
 
 # ╔═╡ cafe000d-0000-4000-8000-00000000000d
 begin
-    # BSON serialises type references as a literal module path starting at
-    # :Main, so deserialisation tries to resolve `Main.DDMHMMFit`. In Pluto our
-    # cells live in `Main.var"workspace#N"`, not `Main`, so a struct defined
-    # here is invisible to BSON. Define it in the real `Main` module instead.
+    # BSON resolves `Main.DDMHMMFit`; Pluto cells live in `Main.var"workspace#N"`,
+    # so define the struct in `Main` itself.
     if !isdefined(Main, :DDMHMMFit)
         Core.eval(Main, :(struct DDMHMMFit
             hmm

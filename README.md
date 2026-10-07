@@ -10,18 +10,12 @@ Code, data, and fitted models for:
 
 ## Overview
 
-Most models of decision-making assume every trial comes from the same, unchanging
-process. When we recorded rats working around the clock in an autonomous training
-facility, that assumption fell apart: accuracy, reaction time, and how much the
-animals chose to work all shifted with the time of day.
-
-This repository holds the analysis code behind the paper, built around the model we
-introduce there: a **Drift Diffusion Model–Hidden Markov Model (DDM-HMM)**. Rather
-than treating the animal as being in one fixed decision-making mode, the model lets
-it move between a handful of latent states, each with its own set of drift-diffusion
-parameters. Because we fit choices and reaction times together (through a Wiener
-First Passage Time likelihood), we can watch the underlying decision process change
-as the animal moves through the circadian cycle.
+Rats working around the clock in an autonomous facility shift in accuracy,
+reaction time and willingness to work with time of day. This repository holds
+the analysis code behind the paper and its model, a **Drift Diffusion
+Model–Hidden Markov Model (DDM-HMM)**: the animal moves between a few latent
+states, each with its own drift-diffusion parameters, fit to choices and
+reaction times jointly through the Wiener first-passage-time likelihood.
 
 ## Repository layout
 
@@ -51,12 +45,9 @@ as the animal moves through the circadian cycle.
 
 ## Quickstart
 
-Everything runs in Julia (we developed against **Julia 1.11.7**). If you're setting
-up from scratch, **[`notebooks/README.md`](notebooks/README.md)** walks through the
-installation: installing Julia, instantiating the pinned environment, pointing the
-`DriftDiffusionModels.jl` path dependency at the right place, and launching Pluto.
-
-Once that's done, from the repository root:
+Everything runs in Julia (**1.11.7**). **[`notebooks/README.md`](notebooks/README.md)**
+covers installation, the `DriftDiffusionModels.jl` path dependency and Pluto.
+From the repository root:
 
 ```bash
 # 1. Instantiate the analysis environment (downloads pinned package versions)
@@ -73,14 +64,9 @@ A natural reading order: `DataPreprocess.jl` -> `FitDDMHMMs.jl` /
 ## Reproducing figures
 
 **[`notebooks/README.md` §6](notebooks/README.md#6-reproducing-the-published-figures)
-maps every published figure panel to the script that produces it**, along with the
-order in which the fitting and figure notebooks must be run.
-
-The notebooks regenerate the source figures. As `notebooks/README.md` explains,
-don't expect these to match the published panels pixel-for-pixel: the published
-versions were exported as vector graphics and then cleaned up in Adobe Illustrator.
-The underlying numbers, statistics, and geometry are the same, but the typography
-and layout were polished by hand.
+maps every panel to the script that produces it** and gives the run order.
+Published panels were finished in Illustrator, so notebook output matches them
+in numbers and geometry but not pixel-for-pixel.
 
 ## Data
 
@@ -94,8 +80,7 @@ The dataset is also archived on Zenodo, which is the citable version of record:
 
 ## Citation
 
-If you use this code or data, please cite the paper (see the reference at the top
-of this file). A `bibtex` entry will be added once the DOI is finalized.
+Please cite the paper (reference at the top). BibTeX to follow once the DOI is final.
 <!-- REVIEW: add final BibTeX once confirmed. -->
 
 ## License

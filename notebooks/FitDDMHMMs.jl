@@ -17,7 +17,7 @@ struct DDMHMMFit
     logL_evolution::Vector{Float64}
 end
 
-# don't need for this but will keep here for future reference
+# Unused here; kept for reference.
 function load_best_ddmhmm(
     rat::AbstractString, K::Int; results_dir=joinpath("results", "ddm_hmm")
 )
@@ -49,49 +49,34 @@ DataFrames.transform!(
 
 names = String.(unique(rat_df[!, "name"]))
 
-#=
-creates data to pass to the ddm-hmm
-=#
+# Build (all_results, seq_ends, results_by_date) for one rat, one sequence per day.
 function data_for_ddmhmm(rat_idx::Int)
     rat = names[rat_idx]
 
     rat_of_interest = rat_df[rat_df.name .== rat, :]
     dates = [Date(split(dt)[1]) for dt in rat_of_interest.trial_datetime]
 
-    # Get unique dates in chronological order
     unique_dates = sort(unique(dates))
-
-    # Create a vector of vectors, where each inner vector contains DDMResults for one day
     results_by_date = Vector{Vector{DDMResult}}()
 
     for date in unique_dates
-        # Get indices for this date
         day_indices = findall(dates .== date)
-
-        # Skip days with no valid data
         if isempty(day_indices)
             continue
         end
 
-        # Extract RTs and outcomes for this date
         day_rts = rat_of_interest.rt[day_indices]
         day_outcomes = rat_of_interest.choose_right[day_indices]
         day_stim_side = rat_of_interest.correct_side_numeric[day_indices]
 
-        # Create DDMResult objects for this day
         day_results = [
             DDMResult(rt, choice, stim) for
             (rt, choice, stim) in zip(day_rts, day_outcomes, day_stim_side)
         ]
-
-        # Add to our vector of vectors
         push!(results_by_date, day_results)
     end
 
-    # Now calculate the sequence ends (cumulative sum of lengths)
     seq_ends = cumsum([length(seq) for seq in results_by_date])
-
-    # Concatenate all results into a single vector
     all_results = reduce(vcat, results_by_date)
 
     return all_results, seq_ends, results_by_date

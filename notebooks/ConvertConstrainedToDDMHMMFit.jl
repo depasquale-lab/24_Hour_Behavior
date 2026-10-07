@@ -26,8 +26,7 @@ mutable struct TiedPriorHMM{T<:Real} <: HiddenMarkovModels.AbstractHMM
     tied::Vector{Symbol}
 end
 
-# Stubs for the direct-gradient script's local types so BSONs that serialized
-# them can be loaded.
+# Stubs for the direct-gradient script's local types.
 struct DDMEmission{T<:Real}
     B::T
     v::T

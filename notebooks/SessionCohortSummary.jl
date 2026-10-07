@@ -7,8 +7,8 @@ Reads (both cohorts, same session-blocked folds):
   multilevel DDM       results/eddm_exact{_daily,}/cv/
   within-session split results/session_cohort/split_{daily,24hr}/   (SessionSplitDDM.jl)
 
-Only (rat, fold) pairs present for every model are compared. Missing models are
-skipped with a warning, so this can be rerun as jobs finish.
+Only (rat, fold) pairs present for every model are compared; missing models are
+skipped with a warning.
 
 Writes results/session_cohort/:
   heldout_by_rat.csv     per rat: held-out logL per trial for every model

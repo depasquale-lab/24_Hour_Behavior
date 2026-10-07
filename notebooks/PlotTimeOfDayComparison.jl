@@ -1,5 +1,5 @@
 #=
-Reviewer figure: time-of-day DDM vs DDM-HMM on the 24 hr animals.
+Time-of-day DDM vs DDM-HMM on the 24 hr animals.
 
   A  held-out gain over the DDM per rat: time-of-day DDM (τ fixed / τ varying) and
      K = 4 DDM-HMM

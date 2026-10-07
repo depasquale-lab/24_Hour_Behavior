@@ -1,14 +1,12 @@
 #=
-Time-of-day DDM vs DDM-HMM on the 24 hr animals (reviewer comparison).
+Time-of-day DDM vs DDM-HMM on the 24 hr animals.
 
-Inputs:
-  results/tod_ddm/tod_ddm_summary.csv                       (FitTimeOfDayDDM.jl merge)
-  results/ddm_hmm_state_sweep/cv_24hr/cv_state_sweep_summary.csv (GROUP=24hr MergeStateSweepCV.jl)
-  results/bic_summary.csv                                   (all-data K=4 DDM-HMM fits)
+Inputs: <TOD_DIR>/tod_ddm_summary.csv, results/ddm_hmm_state_sweep/cv_24hr/
+cv_state_sweep_summary.csv, results/bic_summary.csv.
 
-Held-out logL is pooled per trial over folds. A (rat, K) cell missing folds is
-scored on the folds it has, and every comparison against it uses the same folds.
-The time-of-day model's best H is chosen from 0..3, so it can fall back to the DDM.
+Held-out logL is pooled per trial over folds; a (rat, K) cell missing folds is
+compared on the folds it has. Best H is chosen from 0..3, so the time-of-day
+model can fall back to the DDM.
 
 Outputs: <TOD_DIR>/tod_vs_hmm_cv.csv, <TOD_DIR>/tod_vs_hmm_bic.csv
 =#

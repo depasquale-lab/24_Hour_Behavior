@@ -89,8 +89,7 @@ function train_test_split(
     )
 end
 
-# TiedPriorHMM (copied from FitConstrainedDDMHMMs.jl so both "full"
-# and "tied-v" can share one fit routine — full = empty tied set).
+# TiedPriorHMM, copied from FitConstrainedDDMHMMs.jl (full = empty tied set).
 
 const DDM_PARAMS = (:B, :v, :a₀, :τ)
 const DDM_BOUNDS = Dict(
@@ -144,11 +143,7 @@ function StatsAPI.fit!(
     tied = hmm.tied
     free = Symbol[p for p in DDM_PARAMS if !(p in tied)]
 
-    # Unconstrained reparameterization: optimize in y-space where
-    #   B, v, τ > 0   →  y = log(x),   x = exp(y)
-    #   a₀ ∈ (0, 1)   →  y = logit(x), x = σ(y)
-    # Drops Fminbox (and its inner/outer barrier iterations) — plain LBFGS
-    # on an unconstrained problem is ~5-10× faster.
+    # Unconstrained y-space (log for B, v, τ; logit for a₀): plain LBFGS, ~5-10× faster than Fminbox.
     logit(p) = log(p / (1 - p))
     sigmoid(y) = 1 / (1 + exp(-y))
     to_y(p::Symbol, x) = p == :a₀ ? logit(clamp(x, 1e-6, 1 - 1e-6)) : log(max(x, 1e-9))
@@ -295,13 +290,7 @@ function test_loglike(hmm, test_data, test_seq_ends)
     return HiddenMarkovModels.logdensityof(hmm, test_data; seq_ends=test_seq_ends)
 end
 
-# Rat selection
-#
-# Sources (priority order):
-#   1. $SGE_TASK_ID     (UGE array job, 1-based index into ALL_RATS)
-#   2. $RAT_IDX         (manual override, 1-based)
-#   3. ARGS[1] as int   (e.g. `julia CrossValidateVTied.jl 3`)
-#   4. none → loop over all rats
+# Rat selection: $SGE_TASK_ID, then $RAT_IDX, then ARGS[1]; none → all rats.
 
 const ALL_RATS = String.(unique(rat_df[!, "name"]))
 

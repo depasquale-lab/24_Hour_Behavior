@@ -34,9 +34,7 @@ df = CSV.read(summary_dir, DataFrame)
 const CONFIG_ORDER = ["full", "τ", "a₀", "τ_a₀", "v", "B"]
 const CONFIG_RANK = Dict(c => i for (i, c) in enumerate(CONFIG_ORDER))
 
-# Some (rat, tied) runs may have NaN-ed out of the fitter and be absent from
-# the CSV. Drop unknown tied labels defensively, then keep only finite BICs so
-# downstream groupby/argmin calls don't pick up missing-data ghosts.
+# Runs that NaN-ed out are absent or non-finite; drop them.
 df = df[in.(df.tied, Ref(CONFIG_ORDER)), :]
 df = df[isfinite.(df.bic), :]
 
@@ -48,8 +46,7 @@ rat_order = sort(unique(df[:, [:rat, :n_trials]]), :n_trials).rat
 # ΔBIC relative to the best (lowest) BIC for each rat.
 transform!(groupby(df, :rat), :bic => (b -> b .- minimum(b)) => :ΔBIC)
 
-# ΔBIC relative to the full model for each rat. NaN when the rat has no
-# "full" entry (e.g., the full-model run failed and didn't make it into the CSV).
+# ΔBIC relative to the full model (NaN if the rat has no full entry).
 transform!(groupby(df, :rat)) do sub
     full_rows = sub[sub.tied .== "full", :]
     sub.ΔBIC_from_full = isempty(full_rows) ?
@@ -140,9 +137,7 @@ hline!(p_bar, [0.0]; color=:black, linestyle=:dash, linewidth=1)
 
 savefig_both(p_bar, joinpath(results_dir, "bic_change_from_full_bar"))
 
-# Summary table of which config wins for each rat. Handles rats whose CSV is
-# missing entries (e.g., only one config survived NaN-ing) — ΔBIC_to_next is
-# NaN when there's no second-best to compare against.
+# Winning config per rat; ΔBIC_to_next is NaN when there is no second-best.
 
 winners_rows = NamedTuple[]
 for sub in groupby(df, :rat)

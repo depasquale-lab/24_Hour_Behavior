@@ -19,4 +19,5 @@ for g in daily 24hr; do
 done
 GROUP=daily julia notebooks/eDDMExact.jl merge
 julia -t $((NSLOTS-1)) notebooks/SessionCohortSummary.jl
+julia notebooks/SessionCohortACF.jl
 julia notebooks/PlotSessionCohortFigure.jl

@@ -52,9 +52,7 @@ rats = sort(unique(df.rat))
 const K = 4
 const NRAT = length(rats)
 
-# vB is the DDM's own discriminability term: for an unbiased diffusion the
-# probability correct is 1 / (1 + exp(-2vB)), so it is the model-internal
-# analogue of the accuracy ordering used to label states.
+# vB: P(correct) = 1 / (1 + exp(-2vB)) for an unbiased DDM, the model-internal accuracy.
 df.absbias = abs.(df.a0 .- 0.5)
 df.vB = df.v .* df.B
 
@@ -100,9 +98,7 @@ plot!(
 
 # Panel B: which parameter orders the states the same way in every rat
 
-# Kendall τ is computed within each rat against the accuracy rank and negated, so
-# a positive τ means "higher value in the better state". A conserved parameter
-# gives the same sign in every rat; an idiosyncratic one scatters about zero.
+# Within-rat Kendall τ against accuracy rank, signed so τ > 0 = higher in the better state.
 feature_order = [:v, :tau, :occupancy, :B, :a0, :absbias]
 feature_labels = ["v", "τ", "occ.", "B", "a0", "|bias|"]
 
@@ -120,11 +116,8 @@ for (j, f) in enumerate(feature_order), rat in rats
     )
 end
 
-# Consistency = how many rats share the majority sign, among the rats that show
-# an ordering at all. With four states τ can be exactly zero, and those ties carry
-# no directional information; counting them in the denominator understates the
-# effect (boundary B has five such ties). Significance is an exact two-sided sign
-# test over the non-tied rats.
+# Consistency = rats sharing the majority sign, excluding τ = 0 ties (B has five);
+# exact two-sided sign test over the non-tied rats.
 "Exact two-sided binomial test of `k` successes in `n` trials against p = 0.5."
 function sign_test_p(k::Int, n::Int)
     n == 0 && return 1.0

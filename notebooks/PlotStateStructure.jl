@@ -1,21 +1,15 @@
 #=
-Response-to-reviewers figure: is there a data-driven cross-animal state taxonomy?
+Can unsupervised analyses of the fitted DDM parameters recover a cross-animal
+state taxonomy? Not a manuscript figure.
 
-Not intended for the manuscript. It documents what unsupervised analyses of the
-fitted DDM parameters do and do not recover, in support of the accuracy-based
-state labelling.
+  A  PCA of all 72 states under three normalisations (population z, within-animal
+     centred with pooled SD, within-animal z), coloured by accuracy rank
+  B  per normalisation: leave-one-animal-out template rank recovery vs shuffle
+     null, and animals whose PC1 orders states by accuracy
+  C  k-means: how many clusters each animal's four states occupy
+  D  unsupervised consensus alignment (never uses accuracy) vs the accuracy labels
 
-  A  PCA of all 72 states under three normalisations: z-scored across the
-     population, centred within animal (pooled SD), and z-scored within animal,
-     coloured by accuracy rank
-  B  per normalisation: leave-one-animal-out nearest-template rank recovery
-     against a shuffle null, and animals whose PC1 orders states by accuracy
-  C  k-means clustering of all 72 states: how many distinct clusters each
-     animal's four states occupy
-  D  unsupervised consensus alignment (never uses accuracy) against the
-     accuracy-based labelling
-
-Input is `state_parameters_long.csv` from ExtractStateParameters.jl.
+Input: state_parameters_long.csv from ExtractStateParameters.jl.
 =#
 
 using Pkg
@@ -73,10 +67,8 @@ sort!(df, [:rat, :state])
 FEATS = [:logB, :logv, :logτ, :absbias]
 X = Matrix{Float64}(df[!, FEATS])
 
-# Three normalisations of the same states. Population: each parameter z-scored
-# over all 72 states. Centred: each animal centred on its own mean, then scaled
-# by the pooled SD (k-means below uses this). Within-animal z: each animal's
-# states centred and scaled by that animal's own SD, i.e. relative structure only.
+# Three normalisations: population z; within-animal centred, pooled SD (used by
+# k-means); within-animal z.
 Xp = (X .- mean(X; dims=1)) ./ std(X; dims=1)
 Xw = copy(X)
 Xz = copy(X)
@@ -134,8 +126,7 @@ end
 const NNULL = 2000
 null_ranks = [shuffled_ranks() for _ in 1:NNULL]
 
-# Panel A / B statistics. Animals whose τ is exactly zero show no ordering and
-# carry no directional information, so they are excluded from the sign test.
+# Panel A / B statistics; τ = 0 animals are excluded from the sign test.
 norm_stats = map(NORMS) do (name, Z)
     S, ve = pca_scores(Z)
     ts = [corkendall(Float64.(df[df.rat .== r, :acc_rank]), S[df.rat .== r, 1]) for r in rats]
@@ -249,8 +240,7 @@ annotate!(
 
 # Panel D: unsupervised consensus alignment against the accuracy labelling
 
-# Within-animal z-scored state profiles; alignment is over all K! relabellings, which
-# is exhaustive for K = 4 and so needs no assignment heuristic.
+# Alignment is exhaustive over all K! relabellings.
 P = Dict(r => Xz[df.rat .== r, :] for r in rats)
 "All permutations of 1:n (matches the helper in CompareVTiedVsFull.jl)."
 function all_permutations(n::Int)
@@ -300,8 +290,7 @@ end
 
 perm, consensus_cost = consensus_alignment(P)
 
-# Null: the same procedure on parameter-independent random profiles, which gives
-# the alignment cost achievable when no real cross-animal correspondence exists.
+# Null: same procedure on random profiles.
 null_costs = Float64[]
 for _ in 1:200
     Pn = Dict(
@@ -314,8 +303,7 @@ for _ in 1:200
     push!(null_costs, consensus_alignment(Pn; restarts=25)[2])
 end
 
-# Slot 1..K is arbitrary, so map slots onto accuracy ranks by the best-matching
-# relabelling before cross-tabulating.
+# Slots are arbitrary; map them onto accuracy ranks by the best relabelling.
 slot = Dict{Tuple{eltype(rats),Int},Int}()
 for r in rats
     states = df[df.rat .== r, :state]
@@ -393,7 +381,7 @@ fig = plot(
     bottom_margin=8Plots.mm,
     top_margin=5Plots.mm,
 )
-savefig_both(fig, joinpath(results_dir, "reviewer_state_structure"))
+savefig_both(fig, joinpath(results_dir, "state_structure"))
 
 println("\nPCA and held-out rank recovery by normalisation (chance 25%)")
 for ns in norm_stats
@@ -418,4 +406,4 @@ end
     "consensus vs accuracy labelling: %.0f%% of states, median τ = %+.2f, %d/%d animals positive\n",
     100 * best_agree, median(τ_cons), count(>(0), τ_cons), NRAT
 )
-println("\nFigure written to $(joinpath(results_dir, "reviewer_state_structure"))")
+println("\nFigure written to $(joinpath(results_dir, "state_structure"))")

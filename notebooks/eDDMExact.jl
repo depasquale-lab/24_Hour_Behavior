@@ -1,28 +1,22 @@
 #=
 Exact (maximum marginal likelihood) refit of the per-rat eDDM, replacing the
-variational fit in eDDM.jl. Same data, same per-rat pooling of all trials.
+variational fit in eDDM.jl. Hyperparameters (m, σ0) by fit_mlddm_exact
+(Gauss–Hermite quadrature, L-BFGS, several starts, quadrature order raised until
+error < 1e-3 nats/trial); per-trial posteriors from trial_posteriors.
 
-Hyperparameters (m, σ0) are fit by fit_mlddm_exact (Gauss–Hermite quadrature
-over the trial-level parameters, L-BFGS on the marginal likelihood, several
-starts, quadrature order escalated until the error is < 1e-3 nats/trial).
-Per-trial posterior means/SDs come from trial_posteriors at the final order.
-
-Outputs use the same columns as the VI outputs so eDDM_posthoc.jl can read
-either (results/eddm_exact/):
+Outputs (results/eddm_exact/, same columns as the VI outputs so eDDM_posthoc.jl
+reads either; no ELBO history):
   eddm_trial_posteriors_by_rat.csv.gz   μ_u* = posterior mean, logσ_u* = log posterior SD
   eddm_hyperparams_by_rat.csv           m_u*, logσ0_u* = log σ0
   eddm_fit_summary_by_rat.csv           loglik, BIC, convergence, quadrature error
-(no ELBO history: the exact fit has none).
 
-Task selection: $SGE_TASK_ID or ARGS[1] = 1-based rat index; none -> every rat.
-`julia notebooks/eDDMExact.jl merge` combines the per-rat files.
+Task: $SGE_TASK_ID or ARGS[1] = rat index; none -> every rat. `merge` combines
+the per-rat files.
 
-Held-out scoring (`julia notebooks/eDDMExact.jl cv`): the same session-blocked
-5-fold split as CrossValidateStatesDaily.jl, so the held-out logL lines up
-with the DDM-HMM CV row for row. Each fold is refit on its training sessions
-only, warm-started from the rat's full-data optimum (one start, quadrature
-order fixed at the full fit's), then scored on the held-out sessions. Here
-$SGE_TASK_ID indexes the (rat x fold) grid, rat-major. Writes
+`cv`: the session-blocked 5-fold split of CrossValidateStatesDaily.jl, so
+held-out logL lines up with the DDM-HMM CV. Each fold is refit on its training
+sessions, warm-started from the full-data optimum (one start, fixed quadrature
+order). $SGE_TASK_ID indexes the (rat x fold) grid, rat-major. Writes
 OUT_DIR/cv/<rat>_fold<f>_cv.csv; `cv-merge` stitches them.
 
 Env knobs: GROUP (24hr | daily), N_STARTS (4), Q (8), OUT_DIR, N_FOLDS (5),

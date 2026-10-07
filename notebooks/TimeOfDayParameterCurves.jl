@@ -1,13 +1,9 @@
 #=
-DDM parameters across the day: time-of-day DDM vs DDM-HMM (reviewer figure).
-
-For each 24 hr rat:
-  - DDM-HMM (final K = 4 tied-full fits): per-trial parameter = posterior-weighted
-    state parameter, Σ_k γ_kt θ_k, from the smoothed state posteriors.
-  - Time-of-day DDM (VARY_TAU=1, all-data fit, best-BIC H): θ(hour).
-Both are binned by hour from lights-on (07:30). Also reports how much of the
-HMM's trial-level parameter variance hour of day explains (between-hour variance
-/ total variance, trial-weighted).
+DDM parameters across the day: time-of-day DDM vs DDM-HMM.
+  DDM-HMM (final K = 4 fits): per-trial parameter = Σ_k γ_kt θ_k from smoothed posteriors
+  Time-of-day DDM (VARY_TAU=1, all-data fit, best-BIC H): θ(hour)
+Both binned by hour from lights-on (07:30). Also reports the fraction of the
+HMM's trial-level parameter variance explained by hour (between / total).
 
 Writes results/tod_ddm_vary_tau/param_curves_long.csv and param_variance_by_hour.csv.
 =#
@@ -21,7 +17,7 @@ using BSON: @load
 using DriftDiffusionModels
 using HiddenMarkovModels
 
-# --- struct stubs so BSON can rehydrate all three saved schemas ---
+# Struct stubs so BSON can rehydrate all three saved schemas
 struct ConstrainedDDMHMMFit
     hmm::Any
     tied::Vector{Symbol}
@@ -87,7 +83,6 @@ function θ_to_priorhmm(θ::Vector{Float64}, K::Int, tied::Vector{Symbol})
     return PriorHMM(init, trans, dists, 1, 1)
 end
 
-# Fit loading copied from ExtractStateParameters.jl.
 _gamma(ret) = ret isa AbstractMatrix ? ret :
               ret isa Tuple ? _gamma(ret[1]) :
               hasproperty(ret, :γ) ? getfield(ret, :γ) : error("no γ")

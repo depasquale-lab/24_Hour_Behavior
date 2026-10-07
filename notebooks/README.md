@@ -1,14 +1,12 @@
 # Notebooks
 
-Pluto notebooks for the analyses and figures in the paper. The model fits
-(GLM-HMM and DDM-HMM posteriors) are produced by the headless fitting scripts
-in this folder; everything else — diagnostics, statistics, figure
-panels, runs interactively in Pluto.
+Pluto notebooks and headless scripts for the analyses and figures in the paper.
+Fits are produced by the scripts; diagnostics, statistics and figure panels run
+in Pluto.
 
 ## 1. Install Julia
 
-These notebooks were developed against **Julia 1.11.7**. Any 1.11.x point
-release should work. The easiest cross-platform installer is
+Developed against **Julia 1.11.7**; any 1.11.x should work. Install with
 [`juliaup`](https://github.com/JuliaLang/juliaup):
 
 ```bash
@@ -19,7 +17,7 @@ curl -fsSL https://install.julialang.org | sh
 winget install julia -s msstore
 ```
 
-Then pin the channel used in this repo:
+Then:
 
 ```bash
 juliaup add 1.11
@@ -28,9 +26,8 @@ juliaup default 1.11
 
 ## 2. Install Pluto
 
-Pluto is listed as a dependency in this folder's `Project.toml`, so once you
-instantiate the environment (next section) it is already available. You can
-also install it into your global environment if you prefer:
+Pluto is a dependency of this folder's `Project.toml`, so instantiating the
+environment (next section) installs it. Or add it globally:
 
 ```julia
 using Pkg
@@ -39,28 +36,24 @@ Pkg.add("Pluto")
 
 ## 3. Set up the environment
 
-The `notebooks/` folder has its own Julia environment, defined by
-`notebooks/Project.toml`. From the **repository root**:
+From the **repository root**:
 
 ```bash
 julia --project=notebooks -e 'using Pkg; Pkg.instantiate()'
 ```
 
-This resolves and downloads every package. `Manifest.toml` is not committed
-and `Project.toml` has no `[compat]` bounds, so you get the latest releases,
-which may be newer than the versions used for the paper. The first run takes several minutes, and each notebook
-precompiles the first time you open it.
+`Manifest.toml` is not committed and `Project.toml` has no `[compat]` bounds,
+so you get current releases, possibly newer than the paper's. The first run
+takes several minutes.
 
-Note that `Project.toml` references two path-based dependencies:
+`Project.toml` has two path dependencies:
 
 - `BehaviorModels` — the package at the root of this repository (resolves
   automatically via the `[sources]` table).
-- `DriftDiffusionModels` — expected at `../../DriftDiffusionModels.jl`
-  relative to `notebooks/`, i.e. in the folder that contains this
-  repository. Clone
+- `DriftDiffusionModels` — expected at `../../DriftDiffusionModels.jl`, i.e.
+  next to this repository. Clone
   [DriftDiffusionModels.jl](https://github.com/depasquale-lab/DriftDiffusionModels.jl)
-  there, or point the `[sources]` path in `Project.toml` at wherever you
-  cloned it.
+  there, or edit the `[sources]` path.
 
 ## 4. Launch a Pluto notebook
 
@@ -70,11 +63,7 @@ From the repo root:
 julia --project=notebooks -e 'using Pluto; Pluto.run()'
 ```
 
-This starts the Pluto server and opens your browser. In the file picker,
-navigate to `notebooks/` and open the `.jl` file you want, Pluto will
-activate the notebook's environment automatically.
-
-To open one directly without the file picker:
+Open any `.jl` under `notebooks/` from the file picker, or directly:
 
 ```bash
 julia --project=notebooks -e 'using Pluto; Pluto.run(notebook="notebooks/PopulationDDMHMM.jl")'
@@ -96,43 +85,43 @@ julia --project=notebooks -e 'using Pluto; Pluto.run(notebook="notebooks/Populat
 | `Rat_Daily.jl` | Per-rat / daily exploratory views. |
 | `eDDM.jl`, `eDDM_posthoc.jl` | Extended-DDM variants and follow-up. |
 
-### Added in revision
+### Analysis scripts
 
-These are plain Julia scripts rather than Pluto notebooks. Run each one from the
-repository root with `julia --project=notebooks notebooks/<Script>.jl`. The
-slow fits are written as SGE array jobs; the matching `cluster/*.sh` wrappers are
-listed in the [cluster scripts](#cluster-scripts) table below.
+Plain Julia scripts: `julia --project=notebooks notebooks/<Script>.jl` from the
+repository root. Slow fits run as SGE array jobs via the
+[cluster wrappers](#cluster-scripts).
 
 | Script | Purpose |
 |--------|---------|
-| `FitConstrainedDDMHMMs.jl` | Constrained (parameter-tied) K = 4 DDM-HMM fitter. It fits each tying config (`full`, `τ`, `a₀`, `τ+a₀`, `v`, `B`) by Baum–Welch and scores it by BIC. It also defines the shared fitting code that the other scripts `include`. |
+| `FitConstrainedDDMHMMs.jl` | K = 4 DDM-HMM fitter for each tying config (`full`, `τ`, `a₀`, `τ+a₀`, `v`, `B`), Baum–Welch, scored by BIC. Also the shared fitting code other scripts `include`. |
 | `FitOneRat.jl` | Runs `FitConstrainedDDMHMMs.jl` for one rat, as one array task. |
 | `FitOneRatGradient.jl` | Same configs as above, but fit by direct L-BFGS on the marginal likelihood instead of Baum–Welch. |
 | `DirectGradientDDMHMM.jl` | Single-rat test of the direct-gradient fitter (30 restarts). |
 | `MergeBicSummaries.jl` | Combines the per-rat BIC CSVs into `results/final_ddmhmms/bic_summary.csv`. |
 | `ConvertConstrainedToDDMHMMFit.jl` | Re-saves the final constrained fits in the `ddmhmms/*_compat.bson` format that the older notebooks read. |
-| `ExtractStateParameters.jl` | Reads the final K = 4 fits and writes per-rat, per-state DDM parameters, posterior-weighted behavior, psychometric/chronometric curves and transition matrices. Every state-level figure below reads its output. |
+| `ExtractStateParameters.jl` | Per-rat, per-state DDM parameters, posterior-weighted behavior and psychometric/chronometric curves from the final K = 4 fits. Every state-level figure reads its output. |
 | `PlotStateComparability.jl` | Cross-animal comparability of states: drift against accuracy rank, within-rat Kendall τ, and accuracy against v·B. |
 | `PlotStateBehavior.jl` | Behavior conditioned on state: psychometric functions, RT by rank, and psychometric slope by rank. |
-| `StateEngagementITI.jl` | Tests whether the states predict trial initiation (ITI, trial rate, breaks). The model never sees these variables. |
+| `StateEngagementITI.jl` | Do the states predict trial initiation (ITI, trial rate, breaks), which the model never sees? |
 | `PlotStateEngagementITI.jl` | Figure for the analysis above. |
-| `ParameterRecovery.jl` | Parameter recovery with ground truth matched to each animal. It simulates from each rat's final fit, then refits blind, at full size and at 10/25/50 % of sessions. |
+| `StateOccupancyByHour.jl` | Posterior occupancy of each state by hour from lights-on, with the paper-wide accuracy rank. |
+| `PlotFigure5.jl` | Figure 5 (composed SVG plus single panels in `figure5_panels/`): occupancy by hour, dark/feeding enrichment, parameters by rank with RM-ANOVA + Holm post-hocs, rat × rank heatmaps. |
+| `ParameterRecovery.jl` | Parameter recovery: simulate from each rat's final fit, refit blind, at full size and 10/25/50 % of sessions. |
 | `PlotParameterRecovery.jl` | Parameter-recovery figure and summary tables. |
 | `StateSweepDaily.jl` / `MergeStateSweep.jl` | Sweeps K = 1…5 on the session-based ("daily") animals and records full-data logL, AIC and BIC. |
 | `CrossValidateStatesDaily.jl` / `MergeStateSweepCV.jl` | Session-blocked 5-fold cross-validation over K = 1…5 for the same animals. |
 | `PlotStateSweepDaily.jl` / `PlotStateSweepCV.jl` | Plots logL/BIC against K and held-out logL against K. |
 | `CrossValidateVTied.jl`, `CompareVTiedVsFull.jl` | Compares tied-drift and full fits: held-out logL, and how the other parameters compensate when `v` is tied. |
-| `eDDMExact.jl` | Refits the per-rat eDDM by exact maximum marginal likelihood (`fit_mlddm_exact`, Gauss–Hermite quadrature), replacing the variational fit in `eDDM.jl`. Writes `results/eddm_exact/` in the same column layout; `eDDM_posthoc.jl` reads it when `fit_source = :exact`. Merge the per-rat outputs with `julia --project=notebooks notebooks/eDDMExact.jl merge`. |
-| `SessionSplitDDM.jl` | Within- vs. between-session control: fits a rat-level DDM, per-session DDMs and a K = 4 DDM-HMM on the first 80% of every session and scores the last 20%. Also fits full-data K = 4 models for the session cohort. Writes `results/session_cohort/split_<group>/`. |
-| `SessionCohortSummary.jl` | Joins all held-out results for both cohorts (DDM-HMM K = 1…5, shuffled-order mixture via `CrossValidateStatesDaily.jl` with `SHUFFLE=1`, multilevel DDM via `eDDMExact.jl cv`, within-session split), runs the paired Wilcoxon tests, and computes within-session switching from held-out Viterbi paths. Writes `results/session_cohort/`. |
-| `PlotSessionCohortFigure.jl` | Session-vs-24 h held-out fits answering the reviewer's §2.9 + §2.11 point: DDM-HMM vs multilevel DDM per rat, and held-out gain vs. K for each cohort. |
-| `PlotStateGenerality.jl`, `PlotReviewerStateStructure.jl` | Figures for the response to reviewers (see [below](#response-to-reviewers-analyses)). |
+| `eDDMExact.jl` | Exact maximum-marginal-likelihood refit of the per-rat eDDM, replacing the variational fit in `eDDM.jl`. Writes `results/eddm_exact/`; `eDDM_posthoc.jl` reads it with `fit_source = :exact`. Merge with `eDDMExact.jl merge`. |
+| `SessionSplitDDM.jl` | Within- vs. between-session control: rat-level DDM, per-session DDMs and K = 4 DDM-HMM fit on the first 80% of each session, scored on the last 20%. Writes `results/session_cohort/split_<group>/`. |
+| `SessionCohortSummary.jl` | Joins held-out results for both cohorts (DDM-HMM K = 1…5, shuffled mixture, multilevel DDM, within-session split), paired Wilcoxon tests, within-session switching from held-out Viterbi paths. Writes `results/session_cohort/`. |
+| `SessionCohortACF.jl` | Within-session RT autocorrelation, real vs. simulated from each rat's full-data DDM-HMM and multilevel DDM, both cohorts. Writes `results/session_cohort/rt_acf_by_rat.csv`, `rt_acf_error.csv`. |
+| `PlotSessionCohortFigure.jl` | Session-vs-24 h figure: A–C held-out gain vs. each competitor, D–F RT autocorrelation model vs. data. Writes the figure and per-panel SVGs to `results/session_cohort/panels/`. |
+| `PlotStateGenerality.jl`, `PlotStateStructure.jl` | Cross-animal state matching figures (see [below](#supplementary-analyses)). |
 
 ## 6. Reproducing the published figures
 
-Each panel below is produced by the listed script. Schematic panels (chamber
-diagrams, task timelines, state-transition cartoons) were drawn in BioRender or
-Illustrator and have no code counterpart.
+Schematic panels were drawn in BioRender or Illustrator and have no code.
 
 ### Main figures
 
@@ -171,9 +160,9 @@ Illustrator and have no code counterpart.
 | **SF12** — GLM-HMM states align with task structure | from the GLM-HMM fits (`GLM_HMM.jl`) | plotted inline |
 | **SF13** — GLM-HMM state structure in an expert rat | `ModelCompFigure.jl` §7 | `null_1065.eps`, `null_Draco.eps`, `logp_by_animal.eps` |
 
-#### Added in revision
+#### Script-generated figures
 
-<!-- REVIEW: fill in figure numbers (and main vs. supplementary) once the revised manuscript is final. -->
+<!-- REVIEW: fill in figure numbers (and main vs. supplementary) once the manuscript is final. -->
 
 All output paths below are relative to `results/`.
 
@@ -184,40 +173,39 @@ All output paths below are relative to `results/`.
 | **SF?** — State-conditioned behavior | A psychometric functions · B mean RT by rank · C psychometric slope by rank | `ExtractStateParameters.jl` → `PlotStateBehavior.jl` | `final_ddmhmms/state_behavior.svg` |
 | **SF?** — States predict trial initiation | A P(state \| ITI) by decile · B ITI by rank · C trial rate by rank · D P(break > 5 min) by rank · E engagement over a work bout · F specificity control | `ExtractStateParameters.jl` → `StateEngagementITI.jl` → `PlotStateEngagementITI.jl` | `final_ddmhmms/state_engagement_iti.svg`, `state_engagement_*.csv`, `state_bout_profile.csv` |
 | **SF?** — Choosing K in session-based animals | logL / ΔlogL / ΔBIC vs. K; held-out logL vs. K; train vs. test gap | `StateSweepDaily.jl` → `MergeStateSweep.jl` → `PlotStateSweepDaily.jl`; `CrossValidateStatesDaily.jl` → `MergeStateSweepCV.jl` → `PlotStateSweepCV.jl` | `ddm_hmm_state_sweep/ll_vs_K_per_rat.svg`, `ll_gain_vs_K.svg`, `bic_vs_K_per_rat.svg`, `state_sweep_winners.csv`; `ddm_hmm_state_sweep/cv/cv_test_ll_vs_K.svg`, `cv_test_ll_gain_vs_K.svg`, `cv_train_vs_test_ll.svg`, `cv_state_sweep_winners.csv` |
+| **SF?** — DDM-HMM vs. multilevel DDM in session and 24 h data | A–C held-out gain vs. multilevel DDM, per-session DDM, shuffled mixture · D–F RT autocorrelation, model vs. data | `SessionCohortSummary.jl`, `SessionCohortACF.jl` → `PlotSessionCohortFigure.jl` | `session_cohort/session_cohort_figure.svg`, `session_cohort/panels/*.svg`, `heldout_stats.csv`, `rt_acf_r2.csv` |
 
 Each script also writes a `.png` next to every `.svg`.
 
 ### The final K = 4 fits
 
-The revision analyses do **not** read `ddmhmms/`. They read the 18 final
-K = 4 tied-full fits in `results/final_ddmhmms/final_ddmhmms/`, one per 24-hour
-animal. Those fits come from the constrained Baum–Welch pipeline
-(`FitOneRat.jl`) and the direct-gradient pipeline (`FitOneRatGradient.jl`),
-which save three different BSON layouts. <!-- REVIEW: say how the fit for each rat was picked (best logL across the two pipelines?). -->
-`ExtractStateParameters.jl` and `StateEngagementITI.jl` can load all three
-layouts, so the fits don't need to be converted first. To load them from the
-older notebooks, run `ConvertConstrainedToDDMHMMFit.jl`, which writes
-`results/final_ddmhmms/ddmhmmfit_compat/`.
+The analysis scripts read the 18 final K = 4 tied-full fits in
+`results/final_ddmhmms/final_ddmhmms/`, not `ddmhmms/`. They come from
+`FitOneRat.jl` (Baum–Welch) and `FitOneRatGradient.jl` (direct gradient), in
+three BSON layouts, all of which the scripts load directly.
+<!-- REVIEW: say how the fit for each rat was picked (best logL across the two pipelines?). -->
+`ConvertConstrainedToDDMHMMFit.jl` rewrites them for the older notebooks
+(`results/final_ddmhmms/ddmhmmfit_compat/`).
 
-### Response-to-reviewers analyses
+### Supplementary analyses
 
-These scripts back the response to reviewers. They are kept here for
-transparency, but none of them is a manuscript figure.
+None of these is a manuscript figure.
 <!-- REVIEW: move any of these into the table above if they made it into the paper. -->
 
 | Script | Question it answers | Output |
 |---|---|---|
-| `PlotStateGenerality.jl` | Main reviewer figure on matching states across animals: schematic; every route (label-free PCA, label-free consensus, held-out template matching, non-decision time, occupancy, psychometric slope) agrees with accuracy rank in 16-17/18 animals, absolute-parameter control 7/18; PCA of all 72 states on absolute vs within-animal parameters with a post hoc accuracy axis (R² 0.37 vs 0.70); within-animal PC1 vs accuracy rank. | `final_ddmhmms/reviewer_state_generality.svg` |
-| `PlotReviewerStateStructure.jl` | Can PCA, k-means or consensus alignment recover a cross-animal state taxonomy without using accuracy? Compares population vs. within-animal normalisation: rank structure appears only when each animal is z-scored on its own. | `final_ddmhmms/reviewer_state_structure.svg` |
+| `PlotStateGenerality.jl` | Matching states across animals: every label-free route agrees with accuracy rank in 16-17/18 animals (absolute-parameter control 7/18); PCA on absolute vs within-animal parameters (accuracy R² 0.37 vs 0.70); within-animal PC1 vs accuracy rank. | `final_ddmhmms/state_generality.svg` |
+| `PlotStateStructure.jl` | Can PCA, k-means or consensus alignment recover a cross-animal taxonomy without accuracy? Rank structure appears only with within-animal z-scoring. | `final_ddmhmms/state_structure.svg` |
 | `CrossValidateVTied.jl` | Held-out logL for full vs. tied-drift fits. | `ddm_hmm_constrained/cv_*_fold*.csv` |
 | `CompareVTiedVsFull.jl` | When drift is tied across states, how do the other parameters compensate? | `ddm_hmm_constrained/v_tied_compensation/` |
 | `DirectGradientDDMHMM.jl` | Single-rat check of the direct-gradient fitter. | `ddm_hmm_constrained/direct_gradient_<rat>/` |
-| `FitTimeOfDayDDM.jl` | Is the DDM-HMM just tracking time of day? Fits a single-state DDM whose bound, drift and starting point are Fourier functions of clock time (H = 0…3 harmonics; `VARY_TAU=1` also lets τ vary), on the same session-blocked folds as the 24 h DDM-HMM CV, plus an all-data fit for BIC. Merge with `julia notebooks/FitTimeOfDayDDM.jl merge`. | `tod_ddm/` (τ fixed), `tod_ddm_vary_tau/` (τ varying): `tod_ddm_summary.csv` |
+| `FitTimeOfDayDDM.jl` | Is the DDM-HMM just tracking time of day? Single-state DDM with Fourier-in-clock-time parameters (H = 0…3; `VARY_TAU=1` also varies τ), same folds as the 24 h CV, plus an all-data fit for BIC. Merge with `FitTimeOfDayDDM.jl merge`. | `tod_ddm/` (τ fixed), `tod_ddm_vary_tau/` (τ varying): `tod_ddm_summary.csv` |
 | `CompareTimeOfDayDDM.jl` | Held-out logL and BIC of the best time-of-day DDM vs. the K = 4 DDM-HMM, per rat. Set `VARY_TAU=1` for the τ-varying fits. | `tod_ddm{,_vary_tau}/tod_vs_hmm_{cv,bic}.csv` |
 | `TimeOfDayFloorCheck.jl` | Repeats the held-out comparison without trials that hit the WFPT density floor (RT ≤ τ), so the gain is not driven by floored trials. | `tod_ddm_vary_tau/floor_check{,_by_fold}.csv` |
 | `PlotTimeOfDayComparison.jl` | Figure: held-out gain over the DDM for the time-of-day DDM and the DDM-HMM, with and without floored trials, and the all-data BIC difference. | `tod_ddm_vary_tau/tod_vs_hmm.svg` |
 | `TimeOfDayParameterCurves.jl` | DDM parameters by hour from lights-on: the DDM-HMM's posterior-weighted trial parameters vs. the time-of-day DDM's curves, and how much of the HMM's trial-level parameter variance hour of day explains. | `tod_ddm_vary_tau/param_curves_long.csv`, `param_variance_by_hour.csv` |
 | `PlotTimeOfDayParameterCurves.jl` | Figure for the analysis above: one example rat, then all rats with each curve centred on its own daily mean. | `tod_ddm_vary_tau/param_curves.svg` |
+| `SessionCohortPredictRT.jl` | One-step-ahead E[RT] on held-out sessions: DDM-HMM, multilevel DDM, running mean. Not in the figure: the running mean matches the DDM-HMM on raw R²; the DDM-HMM wins within session. | `session_cohort/predict_rt_by_rat.csv` |
 
 `results/ddm_hmm_constrained/` and `results/ddm_hmm_gradient/` are gitignored,
 so `CrossValidateVTied.jl`, `CompareVTiedVsFull.jl` and `DirectGradientDDMHMM.jl` only have
@@ -226,10 +214,8 @@ outputs on a machine where they have been run. The time-of-day per-rat fits
 
 ### Cluster scripts
 
-The long fits were run on an SGE cluster. The wrappers live in
-[`cluster/`](../cluster/). Each one `cd`s to a hard-coded project path on the
-original cluster, so edit that line and the `#$ -P` project before running
-`qsub cluster/<wrapper>.sh`.
+SGE wrappers in [`cluster/`](../cluster/). Each `cd`s to a hard-coded project
+path; edit that and the `#$ -P` project before `qsub cluster/<wrapper>.sh`.
 
 | Wrapper | Runs | Array over |
 |---|---|---|
@@ -248,23 +234,21 @@ original cluster, so edit that line and the `#$ -P` project before running
 | `run_cvShuffled_{24hr,daily}_array.sh` | `CrossValidateStatesDaily.jl` (`SHUFFLE=1`, K = 4) | rat × fold |
 | `run_sessionSplit_{24hr,daily}_array.sh` | `SessionSplitDDM.jl` | rats |
 | `run_timeOfDayDDM_array.sh` | `FitTimeOfDayDDM.jl` (set `VARY_TAU=1` for the τ-varying fits) | rats |
-| `run_sessionCohortFinalize.sh` | all session-cohort merges, then `SessionCohortSummary.jl` and `PlotSessionCohortFigure.jl` | — (submit with `-hold_jid` on the jobs above) |
+| `run_sessionCohortFinalize.sh` | all session-cohort merges, then `SessionCohortSummary.jl`, `SessionCohortACF.jl` and `PlotSessionCohortFigure.jl` | — (submit with `-hold_jid` on the jobs above) |
 
 After an array job finishes, run the matching `Merge*.jl` script to combine the
 per-task outputs.
 
 ### Two figures, one notebook
 
-`PosthocDDMHMM.jl` generates both Figure 4 and Supplementary Figure 6. It is
-parameterised by a single variable near the top of the notebook:
+`PosthocDDMHMM.jl` makes both Figure 4 and SF6, set by one variable near the top:
 
 ```julia
 rat = "1062"     # Supplementary Figure 6 (expert rat)
 # rat = "Remy"   # Figure 4 (representative rat)
 ```
 
-Set `rat` and re-run the notebook; outputs are written to `results/` as
-`posthoc_<rat>_<panel>.svg`.
+Outputs go to `results/posthoc_<rat>_<panel>.svg`.
 
 ### Order of operations
 
@@ -284,8 +268,7 @@ CrossValidationLoop.jl   # state-count selection; writes results/
    +-- MiscFigures.jl        -> Fig. 1D, 1E
 ```
 
-The scripts added in revision form a second tree, rooted at the final K = 4
-fits:
+The analysis scripts form a second tree, rooted at the final K = 4 fits:
 
 ```
 FitOneRat.jl / FitOneRatGradient.jl   # final K=4 fits -> results/final_ddmhmms/final_ddmhmms/  (cluster)
@@ -295,26 +278,21 @@ FitOneRat.jl / FitOneRatGradient.jl   # final K=4 fits -> results/final_ddmhmms/
    |      +-- PlotStateComparability.jl                    -> SF? (comparability)
    |      +-- PlotStateBehavior.jl                         -> SF? (state behavior)
    |      +-- StateEngagementITI.jl -> PlotStateEngagementITI.jl  -> SF? (engagement / ITI)
+   |      +-- StateOccupancyByHour.jl -> PlotFigure5.jl          -> Fig 5 (occupancy / parameters)
    +-- ParameterRecovery.jl -> PlotParameterRecovery.jl    -> SF? (recovery)   (cluster)
 
 StateSweepDaily.jl -> MergeStateSweep.jl -> PlotStateSweepDaily.jl                  -> SF? (daily K)  (cluster)
 CrossValidateStatesDaily.jl -> MergeStateSweepCV.jl -> PlotStateSweepCV.jl          -> SF? (daily K)  (cluster)
 ```
 
-Figure 3A is produced by `CrossValidationLoop.jl` itself. Several notebooks
-(`PlotConstrainedBIC.jl`, `GLM_HMM.jl`, `HMM_DDM.jl`, and parts of
-`Rat_Daily.jl`) render their panels inline in Pluto rather than writing files;
-use Pluto's export or right-click-save to obtain them.
+`PlotConstrainedBIC.jl`, `GLM_HMM.jl`, `HMM_DDM.jl` and parts of `Rat_Daily.jl`
+render panels inline in Pluto rather than writing files.
 
 `R/GAMS_Flashes_24Hour.R` is independent of the Julia pipeline and reads
 `data/processed_rat_data.csv.gz` directly. It produces Figure 2 and SF2–SF4.
 
 ## 7. A note on figures
 
-Figures rendered by these notebooks **will not match the published versions
-pixel-for-pixel**. The notebook outputs are the analytical source figures
-the published panels were exported as vector graphics (SVG / EPS) and then
-post-processed in Adobe Illustrator for typography, legends, panel
-composition, color harmonization, and layout. The numbers, statistics, and
-geometry are the same; the polish is not. If you have any questions, please email
-rsenne at bu dot edu.
+Notebook output will not match the published panels pixel-for-pixel: those
+were exported as SVG/EPS and finished in Illustrator. Numbers, statistics and
+geometry are the same. Questions: rsenne at bu dot edu.

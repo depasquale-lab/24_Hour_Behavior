@@ -23,23 +23,16 @@ const TIED_CONFIGS = [Symbol[], [:τ], [:a₀], [:τ, :a₀], [:v], [:B]]
 
 Random.seed!(69)
 
-# Source of rat_idx (in priority order):
-#   1. $RAT_LIST + $SGE_TASK_ID  (array job over a non-contiguous subset:
-#                                 RAT_LIST=5:12:14:15:18 with -t 1-5 picks
-#                                 rats 5, 12, 14, 15, 18 in turn).
-#                                 Use ':' as the separator — qsub -v parses
-#                                 ',' as a delimiter between vars.
-#   2. $SGE_TASK_ID  (UGE/SGE array job, task id is the rat idx directly)
-#   3. $RAT_IDX      (manual override, 1-based)
-#   4. first CLI arg (e.g. `julia FitOneRatGradient.jl 3`)
+# rat_idx, in priority order:
+#   1. $RAT_LIST + $SGE_TASK_ID  (RAT_LIST=5:12:14 with -t 1-3 picks rats 5, 12, 14;
+#                                 ':' separator, since qsub -v splits on ',')
+#   2. $SGE_TASK_ID   3. $RAT_IDX   4. ARGS[1]
 function _resolve_rat_idx()
     sge_id = get(ENV, "SGE_TASK_ID", "")
     sge_set = !(isempty(sge_id) || sge_id == "undefined")
 
     list_env = get(ENV, "RAT_LIST", "")
     if !isempty(list_env) && sge_set
-        # Accept ':' or ',' so the var works whether passed via -v (needs ':')
-        # or pre-exported with qsub -V (either works).
         indices = parse.(Int, split(list_env, r"[:,]"))
         slot = parse(Int, sge_id)
         @assert 1 <= slot <= length(indices) "SGE_TASK_ID=$slot out of range 1:$(length(indices)) for RAT_LIST=$list_env"
@@ -223,10 +216,7 @@ function fit_gradient(
     results = Vector{Any}(nothing, n_inits)
     t_wall_start = time()
 
-    # Inits are run sequentially. HMMs.jl parallelizes the forward-backward
-    # across sequences (one thread per session), so giving each L-BFGS run
-    # the full thread pool is faster than nesting Threads.@threads here —
-    # the outer @threads would consume the pool and starve the inner one.
+    # Inits run sequentially: HMMs.jl already threads over sessions inside each fit.
     for init_id in 1:n_inits
         θ0 = θ0s[init_id]
         t0 = time()

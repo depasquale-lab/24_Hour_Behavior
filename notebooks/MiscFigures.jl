@@ -34,8 +34,7 @@ end
 md"""
 # Miscellaneous figures
 
-Standalone figures derived from the raw trial-level data: trial-time
-histogram (time-from-light-on) and per-rat daily accuracy curves.
+Figures from the raw trial table: trial-time histogram and daily accuracy curves.
 
 | § | Section |
 |---|---------|
@@ -61,8 +60,7 @@ end
 md"""
 ## §2 Trial-time histogram
 
-Distribution of trial times relative to light-on (07:30 offset). Bins span
-the 24-hour cycle.
+Trial times relative to lights-on (07:30).
 """
 
 # ╔═╡ face0006-0000-4000-8000-000000000006
@@ -83,9 +81,7 @@ end
 
 # ╔═╡ face0007-0000-4000-8000-000000000007
 begin
-    # Light/dark phase and feeding window are shaded as in Figures 2 and 4:
-    # lights go off 12 h after lights-on, and rats are fed 14:00-16:00, i.e.
-    # 6.5-8.5 h after the 07:30 lights-on reference.
+    # Dark phase (12 h after lights-on) and feeding window (14:00-16:00) shaded as in Figs 2 and 4.
     dark_span    = (12.0, 24.0)
     feeding_span = (6.5, 8.5)
 

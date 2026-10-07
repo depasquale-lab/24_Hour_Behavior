@@ -52,11 +52,7 @@ end
 md"""
 # Population DDM-HMM analysis
 
-This notebook reproduces every population-level figure used in the paper.
-It is organised as **one section per figure** so you can run the section that
-makes the figure you need without touching the rest.
-
-## Notebook layout
+Population-level figures, one section per figure.
 
 | § | Section | Output(s) |
 |---|---------|-----------|
@@ -73,8 +69,8 @@ makes the figure you need without touching the rest.
 | 11 | Stylised trial timeline                 | `stylized_trial_timeline.svg` |
 | 12 | Goodness of fit (QQ, RT histograms, accuracy) | `qq_population_rts.svg`, `rt_distributions_by_rat.svg`, `accuracy_fit_by_rat.svg` |
 
-Toggle the **Save figures** checkbox below to write SVGs to `../results/`.
-Bayesian chains are cached to `notebooks/cache/` so re-opens are fast — delete the cache directory to force a re-fit.
+**Save figures** writes SVGs to `../results/`. Bayesian chains are cached in
+`notebooks/cache/`; delete it to refit.
 """
 
 # ╔═╡ dada0002-0000-4000-8000-000000000002
@@ -104,19 +100,13 @@ md"**Save figures to `../results/` when ticked:** $(@bind save_figs CheckBox(def
 md"""
 ### Load every K=4 fit
 
-Glob the K=4 BSON fits in `../ddmhmms/`, exclude the daily-fit files, and load
-each into a `DDMHMMFit` struct. The rat name is parsed from the filename
-(`<name>_K4_tied-full_compat.bson`).
+K=4 fits from `../ddmhmms/<name>_K4_tied-full_compat.bson`, daily fits excluded.
 """
 
 # ╔═╡ dada0008-0000-4000-8000-000000000008
 begin
-    # BSON serialises type references as a literal module path starting at
-    # :Main, so deserialisation tries to resolve `Main.DDMHMMFit`. In Pluto our
-    # cells live in `Main.var"workspace#N"`, not `Main`, so a struct defined
-    # here is invisible to BSON. Define it in the real `Main` module instead.
-    # `Any`-typed fields are fine — BSON sets them directly to the deserialised
-    # `PriorHMM`, `Float64`, and `Vector{Float64}` values without checking.
+    # BSON resolves `Main.DDMHMMFit`; Pluto cells live in `Main.var"workspace#N"`,
+    # so define the struct in `Main` itself.
     if !isdefined(Main, :DDMHMMFit)
         Core.eval(Main, :(struct DDMHMMFit
             hmm
@@ -124,8 +114,7 @@ begin
             logL_evolution
         end))
     end
-    # Alias into this workspace so plain `DDMHMMFit` (and `Vector{DDMHMMFit}`
-    # in downstream cells) resolves to the Main-scope struct.
+    # Alias so plain `DDMHMMFit` resolves in this workspace.
     DDMHMMFit = Main.DDMHMMFit
 
     bson_files = filter(f -> occursin("K4", f) && !occursin("daily", f),
@@ -145,13 +134,9 @@ end
 md"""
 ## §2 Per-rat × per-state DDM-parameter table
 
-For each (rat, state) pair we compute:
-* the four fitted DDM parameters (`v`, `B`, `a0`, `tau`),
-* simulated accuracy and mean RT (10 000 trials per state),
-* a within-rat **state rank** (1 = lowest accuracy, K = highest),
-* `bias_mag = |a0 − 0.5|`.
-
-Most downstream sections work directly off `ddm_params_df`.
+Per (rat, state): fitted `v`, `B`, `a0`, `tau`; simulated accuracy and mean RT
+(10 000 trials); within-rat accuracy rank (1 = lowest); `bias_mag = |a0 − 0.5|`.
+Downstream sections read `ddm_params_df`.
 """
 
 # ╔═╡ dada000a-0000-4000-8000-00000000000a
@@ -193,8 +178,7 @@ ddm_params_df = build_param_df(ddmhmm_fits, animal_names)
 md"""
 ### Centred SAT frame (`dfc`)
 
-Adds within-rat mean-centred RT/accuracy and within-rat RT order. Used by §5
-(within-animal SAT) and §9 (boxswarm).
+Within-rat mean-centred RT/accuracy and RT order, for §5 and §9.
 """
 
 # ╔═╡ dada000d-0000-4000-8000-00000000000d
@@ -218,9 +202,7 @@ dfc = add_within_animal_centering(ddm_params_df)
 md"""
 ## §3 Figure — parameter heatmaps (rat × state)
 
-Four 18 × 4 heatmaps (one per DDM parameter), with rats sorted top-to-bottom by
-their mean drift `v`. Colour scale is robustly clipped to the 5–95th percentile
-so a single outlier doesn't dominate.
+One 18 × 4 heatmap per parameter, rats sorted by mean `v`, colour clipped to the 5–95th percentile.
 """
 
 # ╔═╡ dada0010-0000-4000-8000-000000000010
@@ -311,9 +293,7 @@ end
 md"""
 ## §4 Figure — best vs worst-state paired differences
 
-For each rat, we pick the state with the highest simulated accuracy (`*_high`)
-and the state with the lowest (`*_low`), then plot per-rat spaghetti lines for
-each DDM parameter.
+Per rat, highest- vs lowest-accuracy state (`*_high`, `*_low`) for each parameter.
 """
 
 # ╔═╡ dada0018-0000-4000-8000-000000000018
@@ -364,8 +344,7 @@ end
 md"""
 ### Paired tests on the (high − low) differences
 
-A paired *t*-test and Wilcoxon signed-rank test for each parameter, plus tests
-of bias-magnitude against zero in the best vs worst-accuracy state.
+Paired *t* and Wilcoxon per parameter; bias magnitude against zero in best vs worst state.
 """
 
 # ╔═╡ dada001e-0000-4000-8000-00000000001e
@@ -399,8 +378,7 @@ end
 md"""
 ## §5 Figure — within-animal speed-accuracy trade-off
 
-Scatter of mean-centred (RT, accuracy) per (rat, state). The black line+ribbon
-shows the mean across rats at each within-rat RT-rank position.
+Mean-centred (RT, accuracy) per (rat, state); black line = mean across rats at each RT-rank position.
 """
 
 # ╔═╡ dada0022-0000-4000-8000-000000000022
@@ -462,8 +440,7 @@ p_n   = logistic(x_n · β)
 ϕ     ~ Exponential(1)
 ```
 
-Predictors are z-scored within parameter, with an intercept appended.
-The chain is **cached to JLD2** so re-opens skip NUTS.
+Predictors z-scored, intercept appended. Chain cached.
 """
 
 # ╔═╡ dada0027-0000-4000-8000-000000000027
@@ -671,11 +648,7 @@ end
 md"""
 ## §8 State occupancy by hour
 
-For each rat, run forward-backward to get posterior state probabilities `γ`,
-align states across rats by **per-rat accuracy rank**, then bin by hour-from-lights-on.
-
-The hour-aggregation bug from the original notebook (`hours`, `mean_occ`,
-`sem_occ` were referenced but never computed) is fixed here.
+Forward-backward posteriors `γ` per rat, states aligned by accuracy rank, binned by hour from lights-on.
 """
 
 # ╔═╡ dada003e-0000-4000-8000-00000000003e
@@ -869,8 +842,7 @@ end
 md"""
 ## §9 Figure — parameter boxswarm by within-rat accuracy rank
 
-Box-and-jittered-dot for each DDM parameter, grouped by within-rat accuracy
-rank (1 = worst, K = best within that rat).
+Box + jittered dots per parameter by within-rat accuracy rank (1 = worst).
 """
 
 # ╔═╡ dada004d-0000-4000-8000-00000000004d
@@ -907,17 +879,13 @@ end
 md"""
 ## §10 Repeated-measures ANOVA + paired post-hocs
 
-One-way RM-ANOVA per parameter (factor = state, subject = rat) followed by
-pairwise paired *t*-tests with Holm correction.
+One-way RM-ANOVA per parameter (subject = rat), then Holm-corrected paired *t*-tests.
 """
 
 # ╔═╡ dada0050-0000-4000-8000-000000000050
 begin
     function wide_by_state(df::DataFrame, param::Symbol)
-        # Pivot on within-rat accuracy rank, NOT raw :state. Raw state IDs are
-        # arbitrary across rats (the HMM fitter labels states in random order),
-        # so unstacking on :state aligns rats by a meaningless axis and the
-        # condition effect averages to ~0 → spuriously non-significant ANOVA.
+        # Pivot on accuracy rank, not raw :state (state IDs are arbitrary across rats).
         w = unstack(df, :rat, :state_rank, param)
         sort!(w, :rat)
         w
@@ -1010,8 +978,7 @@ posthoc_tau = paired_posthoc(ddm_params_df, :tau)
 md"""
 ## §11 Figure — stylised trial timeline
 
-Schematic of one trial used in the methods figure. Side flashes (probabilistic)
-are dropped in between center-poke and decision time.
+One-trial schematic for the methods figure.
 """
 
 # ╔═╡ dada0055-0000-4000-8000-000000000055
@@ -1082,8 +1049,7 @@ end
 md"""
 ## §12 Goodness of fit
 
-Per rat, simulate `n_trials_observed` trials from the fitted HMM, then compare
-to the real data.
+Per rat, simulate as many trials as observed from the fitted HMM and compare.
 """
 
 # ╔═╡ dada0059-0000-4000-8000-000000000059
@@ -1203,8 +1169,7 @@ end
 md"""
 ## §13 Optional — smoothed conditional accuracy function
 
-Helper retained from the original notebook. Not called by any figure here, but
-exposed so it can be reused interactively. Pass it RTs and 0/1 correctness.
+Not used by any figure. Takes RTs and 0/1 correctness.
 """
 
 # ╔═╡ dada0063-0000-4000-8000-000000000063

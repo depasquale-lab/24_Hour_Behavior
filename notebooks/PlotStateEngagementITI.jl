@@ -1,59 +1,23 @@
 #=
-Reviewer figure: the latent states predict trial initiation, which the model
-never saw.
+The states predict trial initiation, which the model never saw.
+The DDM-HMM is fit to (RT, choice, correct side) only; ITI, trial rate and
+breaks are out-of-model predictions of the posterior.
 
-The DDM-HMM is conditioned on reaction time, choice and correct side. How long
-the animal waits before starting the next trial, how many trials it produces per
-minute, and whether it is about to stop working enter neither the likelihood nor
-the state sequence. Every panel here is therefore a held-out prediction of the
-fitted posterior.
+  A  P(state | ITI decile)
+  B  posterior-weighted ITI by state rank
+  C  posterior-weighted trial rate by state rank
+  D  posterior-weighted P(break > 5 min) by state rank
+  E  E[rank] over the last ten trials of a work bout (bouts split by breaks > 5 min)
+  F  specificity control: per-animal Spearman between E[rank] and log ITI /
+     trial rate, each debiased by its own within-session circular-shift null
 
-  A  P(state | ITI): mean posterior in each within-animal decile of the wait
-     preceding the trial
-  B  posterior-weighted inter-trial interval by state rank
-  C  posterior-weighted local trial production rate by state rank
-  D  posterior-weighted P(break > 5 min before the next trial) by state rank
-  E  engagement index E[rank] over the last ten trials of a work bout, where
-     bouts are delimited by breaks longer than five minutes
-  F  SPECIFICITY CONTROL, not an effect-size panel. Per-animal Spearman
-     correlation between the posterior engagement index E[rank] and log ITI /
-     trial rate, each corrected by that animal's own within-session
-     circular-shift null.
-
-STATISTICS. The ANIMAL is the unit of replication everywhere, so no p value in
-this figure can be inflated by trial count. Each panel gets two numbers:
-
-  a trend test   the per-animal Spearman correlation between state rank and the
-                 behaviour across the four states (B, C, D), or between position
-                 in the bout and E[rank] (E), tested against zero over animals.
-                 This is what licenses reading the panels as an ordered trend.
-                 A strictly monotone rank 1 < 2 < 3 < 4 in the raw values holds
-                 in only 1/18 animals and is NOT claimed; the rank correlation
-                 is.
-  a contrast     the rank 1 -> rank 4 fold change (B, C, D) or the change over
-                 the last ten trials of a bout (E), with a 95% CI, so the effect
-                 is reported in units a reader can interpret.
-
-Both are computed with a one-sample t test on the per-animal values (which gives
-the CI) and cross-checked with an exact Wilcoxon signed-rank test (which assumes
-nothing about the distribution). We previously used a sign test; it is valid but
-discards magnitude, gives no interval, and floors at p = 7.6e-6 at n = 18.
-
-Panel F is deliberately NOT annotated with a tally of animals passing their own
-circular-shift permutation test. At 5k-94k trials per rat that test is trivially
-passed: 16/18 animals reach p < 0.05, including animals with rho = 0.004. The
-shift null is retained for the one job it is actually good at, removing the bias
-that the shared autocorrelation of posteriors and ITIs induces in rho, and each
-animal's rho is corrected by its own null mean before the animal-level test. The
-correction turns out to be small (mean rho 0.115 -> 0.107), which is itself the
-reassuring result. A single-trial rank correlation against an ITI this variable
-is floor-limited by trial noise, so a small rho here is not a small effect: rat
-1054 has rho = +0.004 while its ITI more than doubles from its best to its worst
-state. The magnitude of the effect is in B, C and D, in interpretable units.
-
-The hour-of-day control that used to occupy a panel is now printed for the text:
-it is redundant with the circular-shift null in F, and a scatter against the
-identity line is a poor encoding of a paired change.
+The animal is the unit of replication. Each panel reports a trend test (mean
+per-animal Spearman across ranks, or across bout position in E) and a rank 1 ->
+rank 4 contrast with a 95% CI, both by one-sample t test and cross-checked with
+exact Wilcoxon. A strict monotone ordering holds in only 1/18 animals and is not
+claimed; the rank correlation is. F carries no per-animal significance tally:
+the trial-level shift test passes on rho = 0.004 at these trial counts. The
+hour-of-day control is printed for the text, not plotted.
 
 Inputs are the four tables written by StateEngagementITI.jl.
 =#
@@ -108,10 +72,7 @@ rank_colors = palette(:viridis, K)
 
 sem(v) = std(v) / sqrt(length(v))
 
-# --- animal-level tests -------------------------------------------------------
-# Every test below takes one value per animal. The per-animal permutation tests
-# in the stats table use the trial as the unit, so at 5k-94k trials per rat they
-# reach significance on effects of no interest; nothing here can.
+# Animal-level tests (one value per animal; nothing here scales with trial count)
 
 "One-sample t test against `μ0`. Returns the mean, its 95% CI, t, df and p."
 function ttest1(v::AbstractVector{<:Real}; μ0::Real=0.0)
@@ -293,13 +254,8 @@ function rank_panel(col::Symbol; ylabel, title, yscale=:identity, yticks=:auto,
     return p
 end
 
-# Panels B, C and D: initiation latency, trial production and the probability
-# that the animal is about to stop working, all by state rank.
-#
-# Each carries its animal-level trend statistic on the axes, so the panel is
-# readable without the caption. The rank 1 -> rank K contrast with its CI is
-# printed below for the caption. Note that the annotated ρ is the mean of the
-# per-animal rank correlations, NOT a correlation computed on pooled trials.
+# Panels B, C and D: ITI, trial rate and P(break) by state rank. The annotated ρ
+# is the mean per-animal rank correlation, not a pooled-trial correlation.
 
 trend_iti = rank_trend(:iti_pre_geo)
 trend_rate = rank_trend(:trial_rate)
@@ -322,23 +278,15 @@ pD = rank_panel(:p_pause_next; ylabel="P(break > 5 min before next trial)",
                 title="D   worse states precede stopping")
 annotate_trend!(pD, trend_pause)
 
-# Panel E: the engagement index over the run-up to a break.
-#
-# E[rank] = Σ_k rank_k · P(state k) collapses the four posteriors onto one
-# interpretable axis (1 = the animal's most accurate state, K = its least), so
-# the run-up to a break is one line per animal instead of K. Bout onset is not
-# shown: the warm-up there is not supported at the animal level (mean per-animal
-# Spearman -0.27, 10/18, p = 0.14) and is reported as a null in the text.
+# Panel E: E[rank] = Σ_k rank_k · P(state k) over the run-up to a break. Bout
+# onset is not shown: no warm-up at the animal level (ρ = -0.27, 10/18, p = 0.14).
 
 erank = combine(groupby(bout, [:rat, :edge, :pos]),
                 [:acc_rank, :posterior] => ((r, p) -> sum(r .* p)) => :erank)
 bend = sort(erank[erank.edge .== "end", :], [:rat, :pos])
 
-# Animals differ in baseline E[rank] by more than a whole rank (1.48 to 2.69),
-# which is a between-animal offset the paired test never sees. Each animal is
-# therefore drawn relative to its own mean over the ten positions, so the panel
-# shows the quantity that is actually tested. Centring shifts every animal by a
-# constant, so the group trace keeps its shape exactly.
+# Baseline E[rank] spans 1.48-2.69 across animals, an offset the paired test
+# never sees, so each animal is centred on its own mean over the ten positions.
 transform!(groupby(bend, :rat), :erank => (v -> v .- mean(v)) => :erank_c)
 
 pE = plot(;
@@ -359,28 +307,21 @@ ge = across_rats(bend, :pos, :erank_c)
 plot!(pE, -ge.pos, ge.y; yerror=ge.e, color=:black, linewidth=2,
       marker=(:circle, 3.5, stroke(0)), markercolor=:black, markerstrokecolor=:black)
 
-# Trend here is over position in the bout, not over state rank, and is negated
-# so the annotated sign matches the direction drawn: ρ > 0 means E[rank] rises
-# as the break is approached.
+# Trend over bout position, negated so ρ > 0 means E[rank] rises toward the break.
 trend_bout = [-corspearman(Float64.(sort(bend[bend.rat .== r, :], :pos).pos),
                            sort(bend[bend.rat .== r, :], :pos).erank_c)
               for r in unique(bend.rat)]
 annotate_trend!(pE, trend_bout)
 
-# Panel F: per-animal correlation of the engagement index with initiation
-# behaviour, corrected by each animal's own circular-shift null.
+# Panel F: per-animal correlation of E[rank] with initiation behaviour, debiased
+# by each animal's circular-shift null. Inference is the animal-level t test.
 
-# One dot per animal, no per-animal significance encoding: that test is
-# trial-level and at these trial counts it passes on rho = 0.004. The shift null
-# is used to debias rho, and the inference is the animal-level t test drawn as
-# the mean with its 95% CI.
 "Observed per-animal values as dots at `x`, with the across-animal mean ± 95% CI."
 function rho_column!(p, x, obs; color)
     jitter = x .+ 0.17 .* randn(length(obs))
     scatter!(p, jitter, obs; markercolor=color, markerstrokewidth=0,
              markersize=3.6, alpha=0.6, label="")
-    # The interval sits ON the swarm, at the column centre. It is drawn last and
-    # given a white halo so it stays legible where it crosses the dots.
+    # CI drawn last with a white halo so it reads over the dots.
     t = ttest1(obs)
     plot!(p, [x, x], [t.lo, t.hi]; color=:white, linewidth=4.5, label="")
     plot!(p, [x, x], [t.lo, t.hi]; color=:black, linewidth=1.6, label="")
@@ -413,9 +354,7 @@ fig = plot(pA, pB, pC, pD, pE, pF; layout=(2, 3), size=(1150, 700),
            left_margin=5Plots.mm, bottom_margin=5Plots.mm, top_margin=5Plots.mm)
 savefig_both(fig, joinpath(results_dir, "state_engagement_iti"))
 
-# --- numbers for the response letter -----------------------------------------
-# Format: value, 95% CI, one-sample t test, exact Wilcoxon signed-rank, and the
-# count of animals in the predicted direction. n = NRAT animals throughout.
+# Summary numbers (value, 95% CI, t test, Wilcoxon, n in direction)
 
 println("\n================ animal-level statistics (n = $NRAT rats) ================")
 

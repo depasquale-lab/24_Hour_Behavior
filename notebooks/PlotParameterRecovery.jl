@@ -67,8 +67,7 @@ long = DataFrame()
 summary = DataFrame()
 for r in results
     tp, rp = r[:true_params], r[:rec_params]
-    # Rank states within the rat by the DDM's discriminability v·B (the model-internal
-    # counterpart of the accuracy ranking used in the paper; 1 = best).
+    # Rank states within rat by v·B (model-internal accuracy; 1 = best).
     acc_rank = ordinalrank([p.v * p.B for p in tp]; rev=true)
     for k in 1:K, p in PARAMS
         push!(
@@ -270,10 +269,8 @@ end
 hparams = ["v", "B", "a0", "tau", "p_self"]
 hlabels = ["v", "B", "a0", "τ", "p(stay)"]
 
-# Panel I: error vs dataset size.
-# Error in each state is scaled by the spread of that parameter across the rat's
-# four true states, so a value below 1 means the estimate is closer to its own state
-# than the states are to each other.
+# Panel I: error vs dataset size, scaled by the parameter's spread across the
+# rat's true states (< 1 = closer to its own state than the states are to each other).
 spread = combine(groupby(long, [:rat, :rep, :frac, :param]), :truth => std => :spread)
 lj = leftjoin(long, spread; on=[:rat, :rep, :frac, :param])
 lj.scaled_err = abs.(lj.recovered .- lj.truth) ./ lj.spread
@@ -289,10 +286,7 @@ err = combine(
 )
 err = err[err.err .> 0, :]
 
-# Panel H: error scaling with dataset size.
-# Within-rat power law log10(err) = α_rat + β·log10(n). A rat's truth is fixed across
-# its subsamples, so the rat intercept absorbs how separable its states are and β is
-# the data-size effect alone. β = −0.5 is the 1/√n rate of a consistent estimator.
+# Panel H: within-rat power law log10(err) = α_rat + β·log10(n); β = −0.5 is the 1/√n rate.
 err.logn = log10.(err.n_trials)
 err.logerr = log10.(err.err)
 transform!(

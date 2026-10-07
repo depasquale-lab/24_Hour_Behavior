@@ -1,4 +1,4 @@
-# ============================ SETUP ============================
+# SETUP
 library(mgcv)
 library(nlme)
 library(readr)
@@ -8,12 +8,12 @@ library(lubridate)
 library(tidyr)
 library(stringr)
 
-# ============================ CONFIG ============================
+# CONFIG
 TZ_USE <- "America/New_York"
 LIGHTS_ON_SHIFT_H <- 7.5
 K_HOUR <- 16
 
-# ============================ LOAD & PREP ============================
+# LOAD & PREP
 whole_df <- read_csv(
   "data/processed_rat_data.csv.gz",
   show_col_types = FALSE, progress = FALSE,
@@ -58,8 +58,8 @@ df <- whole_df %>%
   ) %>%
   filter(!is.na(name), !is.na(correct), !is.na(hour_cont), !is.na(rt))
 
-# ============================ MODELS ============================
-# ---- ACCURACY (binomial) ----
+# MODELS
+# ACCURACY (binomial)
 K_POP <- 20  # population k
 K_FS  <- 8   # per-animal deviation k
 
@@ -77,7 +77,7 @@ m_acc_hour <- bam(
 )
 print(logLik(m_acc_hour))
 
-# ---- RT (Gamma with log link, response = seconds) ----
+# RT (Gamma with log link, response = seconds)
 K_POP_RT <- 16
 K_FS_RT  <- 8
 m_rt_hour <- bam(
@@ -90,7 +90,7 @@ m_rt_hour <- bam(
 )
 print(logLik(m_rt_hour))
 
-# ---- TRIAL PRODUCTION (NB with offset; 10-min bins default) ----
+# TRIAL PRODUCTION (NB with offset; 10-min bins default)
 USE_AR <- FALSE
 RHO    <- 0.3
 K_POP_P <- 16
@@ -193,7 +193,7 @@ theme_julia <- function(base_size = 12, base_family = "sans") {
     )
 }
 
-# ============================ RAW DOTS (same as before) ============================
+# RAW DOTS (same as before)
 # Accuracy raw summary (pooled trials per integer hour)
 raw_summary <- df %>%
   mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
@@ -235,12 +235,12 @@ raw_trials_per_animal <- count_df %>%
   ) %>%
   mutate(hour_mid = hour_int + 0.5)
 
-# ============================ MARGINAL CURVES (avg over animals) ============================
+# MARGINAL CURVES (avg over animals)
 set.seed(123)
 B <- 300  # bootstrap replicates for ribbons
 animal_ids <- levels(df$name)
 
-# ---- Accuracy ----
+# Accuracy
 hour_seq <- seq(0, 24, by = 0.05)
 grid_all_acc <- tidyr::expand_grid(name = levels(df$name), hour_cont = hour_seq)
 grid_all_acc$pred <- predict(m_acc_hour, newdata = grid_all_acc, type = "response")
@@ -259,7 +259,7 @@ avg_acc <- avg_acc %>%
   mutate(lower = apply(boot_mat_acc, 1, quantile, 0.025),
          upper = apply(boot_mat_acc, 1, quantile, 0.975))
 
-# ---- RT (Gamma/log; predictions on response) ----
+# RT (Gamma/log; predictions on response)
 grid_all_rt <- tidyr::expand_grid(name = levels(df$name), hour_cont = hour_seq)
 grid_all_rt$pred <- predict(m_rt_hour, newdata = grid_all_rt, type = "response")
 
@@ -277,7 +277,7 @@ avg_rt <- avg_rt %>%
   mutate(lower = apply(boot_mat_rt, 1, quantile, 0.025),
          upper = apply(boot_mat_rt, 1, quantile, 0.975))
 
-# ---- Trial production (NB + offset) -> per-hour rate ----
+# Trial production (NB + offset) -> per-hour rate
 hour_seq_rate <- seq(0, 24, by = 0.05)
 grid_all_trials <- tidyr::expand_grid(
   name = levels(count_df$name),
@@ -303,8 +303,8 @@ avg_trials <- avg_trials %>%
   mutate(lower = apply(boot_mat_tr, 1, quantile, 0.025),
          upper = apply(boot_mat_tr, 1, quantile, 0.975))
 
-# ============================ PLOTS ============================
-# ---- Accuracy ----
+# PLOTS
+# Accuracy
 p_acc_vs_tod <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
            fill = "grey90", alpha = 0.5) +
@@ -329,7 +329,7 @@ p_acc_vs_tod <- ggplot() +
 
 print(p_acc_vs_tod)
 
-# ---- RT ----
+# RT
 p_rt_vs_tod <- ggplot() +
   annotate("rect", xmin = 12, xmax = 24, ymin = -Inf, ymax = Inf,
            fill = "grey90", alpha = 0.5) +
@@ -357,7 +357,7 @@ p_rt_vs_tod <- ggplot() +
 
 print(p_rt_vs_tod)
 
-# ---- Trial production ----
+# Trial production
 # 1) per animal × integer hour: sum trials & exposure, then rate
 per_animal_hour <- count_df %>%
   mutate(hour_int = floor(hour_bin),
@@ -409,7 +409,7 @@ print(p_trials_rate)
 # ggsave("flashes_rt_vs_tod_marginal.pdf",  p_rt_vs_tod,  width = 8, height = 6)
 # ggsave("flashes_trials_rate_marginal.pdf", p_trials_rate, width = 8, height = 6)
 
-# ============================ PER-ANIMAL RAW DOTS FOR FACETS ============================
+# PER-ANIMAL RAW DOTS FOR FACETS
 # Accuracy per animal
 raw_summary_indiv <- df %>%
   mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
@@ -449,7 +449,7 @@ raw_trials_indiv <- count_df %>%
   ) %>%
   filter(!is.na(rate_per_animal)) %>%
   mutate(hour_mid = hour_int + 0.5)
-# ============================ INDIVIDUAL ANIMAL FACETS WITH DOTS ============================
+# INDIVIDUAL ANIMAL FACETS WITH DOTS
 
 # Accuracy by animal
 pred_acc_indiv <- grid_all_acc %>%
@@ -522,8 +522,8 @@ ggsave("flashes_acc_facet.svg", p_acc_facet, width = 12, height = 10)
 ggsave("flashes_rt_facet.svg", p_rt_facet, width = 12, height = 10)
 ggsave("flashes_trials_facet.svg", p_trials_facet, width = 12, height = 10)
 
-# =========================== VARIABILITY PLOTS =============================================
-# --- Per-day stats per animal ---
+# VARIABILITY PLOTS
+# Per-day stats per animal
 day_stats <- df %>%
   mutate(session = as.Date(trial_datetime, tz = TZ_USE)) %>%
   group_by(name, session) %>%
@@ -534,7 +534,7 @@ day_stats <- df %>%
     .groups   = "drop"
   )
 
-# --- Summaries across days (center = median; error bars = min..max) ---
+# Summaries across days (center = median; error bars = min..max)
 rt_sum <- day_stats %>%
   group_by(name) %>%
   summarise(
@@ -565,7 +565,7 @@ trials_sum <- day_stats %>%
     .groups = "drop"
   )
 
-# --- Helper: ranked range plot (Makie/Julia-esque) ---
+# Helper: ranked range plot (Makie/Julia-esque)
 make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = FALSE) {
   ord_df <- sum_df %>%
     arrange(if (decreasing) dplyr::desc(center) else center) %>%
@@ -587,12 +587,12 @@ make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = F
     )
 }
 
-# --- Colors from Okabe–Ito palette ---
+# Colors from Okabe–Ito palette
 col_rt     <- julia_colors[1]  # blue
 col_acc    <- julia_colors[3]  # green
 col_trials <- julia_colors[7]  # orange
 
-# --- Build the three ranked plots ---
+# Build the three ranked plots
 # RT: ascending (fastest first)
 p_rt_rank <- make_ranked_range_plot(
   rt_sum,
@@ -620,7 +620,7 @@ p_trials_rank <- make_ranked_range_plot(
   decreasing = TRUE
 )
 
-# --- Show them ---
+# Show them
 print(p_rt_rank)
 print(p_acc_rank)
 print(p_trials_rank)
@@ -631,7 +631,7 @@ print(p_trials_rank)
 
 MIN_TRIALS_PER_HOUR <- 200   # set to 0 to keep all hours
 
-# ---- 1) Build per-session, per-hour stats (one row per name × session × hour)
+# 1) Build per-session, per-hour stats (one row per name × session × hour)
 hourly_base <- df %>%
   mutate(
     session  = as.Date(trial_datetime, tz = TZ_USE),
@@ -645,7 +645,7 @@ hourly_base <- df %>%
     .groups  = "drop"
   )
 
-# ---- 2) Collapse across sessions to get per-animal, per-hour metrics
+# 2) Collapse across sessions to get per-animal, per-hour metrics
 # Weighted by trials per session-hour (so fuller hours count more).
 hourly_by_hour <- hourly_base %>%
   group_by(name, hour_int) %>%
@@ -659,7 +659,7 @@ hourly_by_hour <- hourly_base %>%
   ) %>%
   filter(total_trials >= MIN_TRIALS_PER_HOUR)      # optional sparsity filter
 
-# ---- 3) Summaries across HOURS per animal: median (point) + min..max (bar)
+# 3) Summaries across HOURS per animal: median (point) + min..max (bar)
 summarize_hourly <- function(df, var) {
   df %>%
     group_by(name) %>%
@@ -676,7 +676,7 @@ rt_hour_sum     <- summarize_hourly(hourly_by_hour, rt_hour)
 acc_hour_sum    <- summarize_hourly(hourly_by_hour, acc_hour)
 trials_hour_sum <- summarize_hourly(hourly_by_hour, rate_hour)
 
-# ---- 4) Generic ranked plot helper (Julia/Makie-ish)
+# 4) Generic ranked plot helper (Julia/Makie-ish)
 make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = TRUE) {
   ord_df <- sum_df %>%
     arrange(if (decreasing) dplyr::desc(center) else center) %>%
@@ -694,12 +694,12 @@ make_ranked_range_plot <- function(sum_df, ylab, title, fill_col, decreasing = T
           axis.title.y = element_blank())
 }
 
-# ---- 5) Colors from  Okabe–Ito palette
+# 5) Colors from  Okabe–Ito palette
 col_rt     <- julia_colors[1]  # blue
 col_acc    <- julia_colors[3]  # green
 col_trials <- julia_colors[7]  # orange
 
-# ---- 6) Build the three ranked plots
+# 6) Build the three ranked plots
 # Order all three with larger center at the top (current preference)
 p_rt_hour_rank <- make_ranked_range_plot(
   rt_hour_sum,
@@ -728,7 +728,7 @@ p_trials_hour_rank <- make_ranked_range_plot(
   decreasing = TRUE
 )
 
-# ---- 7) Show them
+# 7) Show them
 print(p_rt_hour_rank)
 print(p_acc_hour_rank)
 print(p_trials_hour_rank)

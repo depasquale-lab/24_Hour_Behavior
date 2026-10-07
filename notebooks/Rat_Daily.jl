@@ -40,10 +40,7 @@ end
 md"""
 # Daily DDM-HMM analysis
 
-Posthoc analyses of K=4 DDM-HMMs fit on the *daily* (non-24-hour) data:
-population ACF posterior predictive check, an example posterior decoding,
-and per-state weighted RT histograms using the joint-normalised scheme
-from `PosthocDDMHMM.jl`.
+Posthoc analyses of the K=4 DDM-HMMs fit to the *daily* (session) animals.
 
 | § | Section |
 |---|---------|
@@ -69,10 +66,8 @@ end
 
 # ╔═╡ bada0005-0000-4000-8000-000000000005
 begin
-    # BSON serialises type references as a literal module path starting at
-    # :Main, so deserialisation tries to resolve `Main.DDMHMMFit`. In Pluto
-    # cells live in `Main.var"workspace#N"`, so define the struct in the real
-    # `Main` module to make it visible to BSON.
+    # BSON resolves `Main.DDMHMMFit`; Pluto cells live in `Main.var"workspace#N"`,
+    # so define the struct in `Main` itself.
     if !isdefined(Main, :DDMHMMFit)
         Core.eval(Main, :(struct DDMHMMFit
             hmm
@@ -115,8 +110,7 @@ end
 md"""
 ## §2 Population RT-ACF posterior predictive
 
-Empirical grand-average RT autocorrelation across rats vs. RT-ACFs simulated
-from each fitted DDM-HMM.
+Grand-average RT ACF across rats vs. ACFs simulated from each fit.
 """
 
 # ╔═╡ bada0008-0000-4000-8000-000000000008
@@ -200,8 +194,7 @@ end
 md"""
 ## §3 Example posterior decoding
 
-Forward-backward posterior for **$(example_rat)** over the trial-concatenated
-session sequence; one short window is shown.
+Forward-backward posterior for **$(example_rat)**, one short window.
 """
 
 # ╔═╡ bada000f-0000-4000-8000-00000000000f
@@ -263,9 +256,7 @@ end
 md"""
 ## §4 Per-state RT histograms
 
-Joint-normalised empirical RTs (weighted by posterior γ) overlaid with
-simulated RT KDEs from the fitted HMM, split by state and correctness —
-same scheme as `PosthocDDMHMM.jl`.
+Posterior-weighted empirical RTs vs simulated KDEs, by state and correctness (as in `PosthocDDMHMM.jl`).
 """
 
 # ╔═╡ bada0013-0000-4000-8000-000000000013
@@ -388,8 +379,7 @@ end
 md"""
 ## §5 Marginal RT distribution
 
-Whole-session empirical RTs vs. simulated RT KDE — same scheme as the
-per-state panels, just collapsed across states.
+Same, collapsed across states.
 """
 
 # ╔═╡ bada0016-0000-4000-8000-000000000016

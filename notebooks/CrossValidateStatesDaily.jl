@@ -1,21 +1,14 @@
 #=
-Cross-validated state-number sweep for the session-based ("daily") animals.
+Session-blocked 5-fold CV over K = 1..5 for the session-based ("daily") animals;
+N_INITS restarts per fit, best by training logL, scored on held-out sessions.
+Folds, restarts and Baum-Welch settings match CrossValidateVTied.jl / FitDDMHMMs.jl.
+Unlike the raw-logL sweep (StateSweepDaily.jl), held-out logL can select a K.
 
-Session-blocked 5-fold CV over K = 1..5, with N_INITS random restarts per fit
-(best restart chosen by TRAINING log-likelihood, then scored on the held-out
-sessions). Fold splitting, restart scheme and Baum-Welch settings mirror
-CrossValidateVTied.jl / FitDDMHMMs.jl so the numbers line up with the 24hr work.
+One task = one (rat, fold): $SGE_TASK_ID (rat-major index), or $RAT_IDX/$FOLD_IDX,
+or ARGS; none -> every rat and fold, serially.
 
-Unlike the raw-logL sweep in StateSweepDaily.jl, held-out logL is not monotone
-in K, so this curve can actually select a K.
-
-Task selection (priority order); one task = one (rat, fold) pair:
-  1. $SGE_TASK_ID   1-based index into the (rat x fold) grid, rat-major
-  2. $RAT_IDX / $FOLD_IDX   manual override (1-based)
-  3. ARGS[1] (task id) or ARGS[1] ARGS[2] (rat idx, fold idx)
-  4. none -> every rat, every fold, serially
-
-Env knobs: GROUP=daily|24hr, SHUFFLE=0|1, RAT_SET=fitted|all, SKIP_DONE=1|0, K_LIST=1,2,3,4,5, N_INITS, MAX_ITER, N_FOLDS
+Env knobs: GROUP=daily|24hr, SHUFFLE=0|1, RAT_SET=fitted|all, SKIP_DONE=1|0,
+K_LIST=1,2,3,4,5, N_INITS, MAX_ITER, N_FOLDS
 =#
 
 using Pkg
@@ -40,17 +33,13 @@ const N_FOLDS = parse(Int, get(ENV, "N_FOLDS", "5"))
 const N_INITS = parse(Int, get(ENV, "N_INITS", "10"))
 const MAX_ITER = parse(Int, get(ENV, "MAX_ITER", "100"))
 
-# Which group: "daily" = session-based animals, "24hr" = 24 hr animals
-# (sessions are calendar days, as in FitDDMHMMs.jl).
+# GROUP: "daily" = session-based, "24hr" = 24 hr animals (sessions = calendar days).
 const GROUP = get(ENV, "GROUP", "daily")
 GROUP in ("daily", "24hr") || error("GROUP must be \"daily\" or \"24hr\", got \"$GROUP\"")
 
-# Which animals: "fitted" = the daily rats that already have K4 fits in
-# results/ddm_hmm, "all" = every animal in the group. 24hr always uses "all".
-# SHUFFLE=1: permute trial order within each TRAINING session before fitting,
-# which leaves the HMM no temporal structure to learn (a mixture of DDMs).
-# Held-out sessions stay in their real order, so test logL is directly
-# comparable with the unshuffled fit on the same fold.
+# RAT_SET: "fitted" = daily rats with K4 fits in results/ddm_hmm; "all" = every
+# animal (24hr always). SHUFFLE=1 permutes trial order within training sessions
+# (a mixture of DDMs); held-out sessions keep their real order.
 const SHUFFLE = get(ENV, "SHUFFLE", "0") == "1"
 
 const RAT_SET = GROUP == "24hr" ? "all" : get(ENV, "RAT_SET", "fitted")

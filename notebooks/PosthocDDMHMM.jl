@@ -43,9 +43,7 @@ end
 md"""
 # Posthoc DDM-HMM analysis
 
-Per-rat posthoc analyses of a fitted DDM-HMM:
-posterior decoding, hour-of-day state occupancy, predicted vs empirical accuracy,
-weighted RT histograms, per-state DDM parameters, and an autocorrelation PPC.
+Per-rat posthoc analyses of one fitted DDM-HMM.
 
 | § | Section |
 |---|---------|
@@ -69,10 +67,8 @@ rat = "1062"
 
 # ╔═╡ aada0006-0000-4000-8000-000000000006
 begin
-    # BSON serialises type references as a literal module path starting at
-    # :Main, so deserialisation tries to resolve `Main.DDMHMMFit`. In Pluto our
-    # cells live in `Main.var"workspace#N"`, not `Main`, so a struct defined
-    # here is invisible to BSON. Define it in the real `Main` module instead.
+    # BSON resolves `Main.DDMHMMFit`; Pluto cells live in `Main.var"workspace#N"`,
+    # so define the struct in `Main` itself.
     if !isdefined(Main, :DDMHMMFit)
         Core.eval(Main, :(struct DDMHMMFit
             hmm
@@ -142,8 +138,7 @@ md"""
 md"""
 ## §3 Posterior plots
 
-Two short windows from the concatenated trial sequence (one near a "night"
-chunk and one near a "day" chunk) to illustrate state dynamics.
+Two short windows (one night, one day) from the concatenated trial sequence.
 """
 
 # ╔═╡ aada000c-0000-4000-8000-00000000000c
@@ -313,8 +308,7 @@ end
 md"""
 ## §5 RT histograms
 
-Empirical RTs (soft-weighted by posterior) overlaid with simulated RT
-distributions from the fitted HMM, split by state and correctness.
+Posterior-weighted empirical RTs vs simulated, by state and correctness.
 """
 
 # ╔═╡ aada0019-0000-4000-8000-000000000019

@@ -56,15 +56,8 @@ const SEQ_ENDS = cumsum([length(s) for s in sessions])
 
 @info "Rat $RAT: $(length(OBS_SEQ)) trials across $(length(sessions)) sessions, K=$K"
 
-# Parameter layout (all unconstrained ℝⁿ; transforms below)
-#
-#   θ = [ init_logits (K)        # softmax → init distribution
-#       | trans_logits (K*K)     # softmax per row → transition matrix
-#       | ddm_y (4*K) ]          # per-state (log_B, log_v, logit_a₀, log_τ)
-#
-# Softmax on init/trans is technically overparameterized (one gauge
-# dimension per simplex) but L-BFGS handles it fine, and it avoids
-# having to choose which logit to pin.
+# θ = [ init_logits (K) | trans_logits (K*K) | ddm_y (4*K) ], all unconstrained.
+# Softmax on init/trans has one gauge dimension per simplex; L-BFGS copes.
 const N_INIT_LOGITS = K
 const N_TRANS_LOGITS = K * K
 const N_DDM_PARAMS = 4 * K
@@ -165,15 +158,9 @@ function neg_logL(θ)
     return -HiddenMarkovModels.logdensityof(hmm, OBS_SEQ; seq_ends=SEQ_ENDS)
 end
 
-# Random initialization in θ-space.
-# Widths chosen to actually probe the landscape (vs. cluster around prior mean):
-#   init logits   σ = 1.0
-#   trans logits  σ = 0.7, diagonal bias jittered Uniform(0.5, 3.0) per-init
-#                 (so some starts are sticky, some less so)
-#   DDM y-space:  log B σ=0.8 around log(2)         → B ∈ ~[0.9, 4.4]
-#                 log v σ=1.0 around 0              → v ∈ ~[0.37, 2.7]
-#                 logit a₀ σ=0.8 around 0           → bias ∈ ~[0.18, 0.82]
-#                 log τ  σ=0.7 around log(0.1)      → τ ∈ ~[0.025, 0.4]
+# Random θ-space init, wide enough to probe the landscape:
+#   init logits σ=1; trans logits σ=0.7 with diagonal bias ~ U(0.5, 3)
+#   log B ~ N(log 2, 0.8), log v ~ N(0, 1), logit a₀ ~ N(0, 0.8), log τ ~ N(log 0.1, 0.7)
 function random_init_θ()
     θ = zeros(N_PARAMS_EFF)
     θ[1:N_INIT_LOGITS] .= randn(N_INIT_LOGITS) .* 1.0
@@ -237,15 +224,11 @@ best_direct = maximum(r[2] for r in direct_results)
 tied_tag = isempty(TIED) ? "full" : "tied-" * join(string.(TIED), "_")
 
 @info """
-
-============================================================
-  Rat $RAT  •  K=$K  •  config=$tied_tag  •  $(length(OBS_SEQ)) trials
-============================================================
-  Direct gradient: best logL = $(round(best_direct; digits=2))
-                   wall clock $(round(t_wall; digits=1))s   (with $(Threads.nthreads()) threads)
-                   CPU total  $(round(t_direct_total; digits=1))s
-                   per-init   $(round(t_direct_total / N_INITS; digits=1))s avg
-============================================================
+Rat $RAT  K=$K  config=$tied_tag  $(length(OBS_SEQ)) trials
+Direct gradient: best logL = $(round(best_direct; digits=2))
+                 wall clock $(round(t_wall; digits=1))s   (with $(Threads.nthreads()) threads)
+                 CPU total  $(round(t_direct_total; digits=1))s
+                 per-init   $(round(t_direct_total / N_INITS; digits=1))s avg
 """
 
 # Save artifacts

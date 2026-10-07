@@ -1,16 +1,13 @@
 #=
-Time-of-day DDM baseline for the 24 hr animals (reviewer comparison).
+Time-of-day DDM baseline for the 24 hr animals: a single-state DDM whose bound,
+drift and starting point are Fourier functions of clock time (τ constant unless
+VARY_TAU=1). H = 0 is the plain DDM; each H warm-starts from H - 1.
 
-A single-state DDM whose bound, drift and starting point are Fourier functions of
-clock time (τ held constant). H = 0 is the plain DDM. Each H is warm-started from
-the H - 1 solution, so training logL is non-decreasing in H.
+Scored on the session-blocked 5-fold split of CrossValidateStatesDaily.jl
+(GROUP=24hr); each H is also fit on all data for BIC.
 
-Scored with the same session-blocked 5-fold split as CrossValidateStatesDaily.jl
-(GROUP=24hr), so held-out logL lines up with the DDM-HMM K sweep. Each H is also
-fit on all data for a BIC comparable to results/bic_summary.csv.
-
-Task selection: $SGE_TASK_ID or ARGS[1] = 1-based rat index; none -> every rat.
-`julia notebooks/FitTimeOfDayDDM.jl merge` concatenates the per-rat CSVs.
+Task: $SGE_TASK_ID or ARGS[1] = rat index; none -> every rat. `merge`
+concatenates the per-rat CSVs.
 
 Env knobs: H_LIST=0,1,2,3, N_FOLDS, VARY_TAU=0|1
 =#
