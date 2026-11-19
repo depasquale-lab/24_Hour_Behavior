@@ -1,14 +1,7 @@
 #=
-Time-of-day DDM vs DDM-HMM on the 24 hr animals.
-
-  A  held-out gain over the DDM per rat: time-of-day DDM (τ fixed / τ varying) and
-     K = 4 DDM-HMM
-  B  DDM-HMM vs time-of-day gain per rat, all held-out trials and excluding trials
-     at the WFPT density floor
-  C  all-data BIC difference, DDM-HMM minus time-of-day DDM
-
-Inputs come from CompareTimeOfDayDDM.jl (both VARY_TAU settings) and
-TimeOfDayFloorCheck.jl. Writes results/tod_ddm_vary_tau/tod_vs_hmm.{png,svg}.
+Time-of-day DDM vs DDM-HMM, 24 hr rats. A held-out gain, B HMM vs ToD gain
+(with/without floored trials), C all-data ΔBIC. Needs CompareTimeOfDayDDM.jl
+(both VARY_TAU), TimeOfDayFloorCheck.jl. -> tod_ddm_vary_tau/tod_vs_hmm.{png,svg}
 =#
 
 using Pkg

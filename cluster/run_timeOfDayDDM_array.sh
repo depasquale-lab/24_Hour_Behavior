@@ -9,7 +9,7 @@
 
 cd "/projectnb/depaqlab/rsenne/hmmddm/24_Hour_Behavior/"
 
-# Time-of-day DDM baseline, H = 0..3 harmonics, same folds as cv_k_24hr.
-# Merge afterwards with: julia notebooks/FitTimeOfDayDDM.jl merge
-# VARY_TAU=1 also lets τ follow time of day (outputs to results/tod_ddm_vary_tau/).
+# time-of-day DDM baseline, H = 0..3 harmonics, same folds as cv_k_24hr
+# merge: julia notebooks/FitTimeOfDayDDM.jl merge
+# VARY_TAU=1: τ also varies with time of day -> results/tod_ddm_vary_tau/
 julia -t auto "notebooks/FitTimeOfDayDDM.jl"

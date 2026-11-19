@@ -1,18 +1,7 @@
 #=
-Figure 5: when each DDM-HMM state is occupied, and how the states differ.
-
-  A  population occupancy of each state by hour from lights-on (mean ± SEM)
-  B  dark-cycle occupancy ratio (hours 12-23 / 24 h)
-  C  feeding-time occupancy ratio (hours 6-8 / 24 h)
-  D-G  B, |a0 - 0.5|, τ, v by state rank
-  H  rat × rank heatmaps of v, τ, |a0 - 0.5| and B (viridis)
-
-States are ranked within animal by posterior-weighted accuracy (1 = most
-accurate), the labelling used throughout the paper. Brackets in D-G are paired
-t tests between ranks, Holm-corrected over the six pairs, drawn where p < 0.05.
-
-Inputs: state_parameters_long.csv (ExtractStateParameters.jl),
-state_occupancy_by_hour.csv (StateOccupancyByHour.jl).
+Figure 5: A occupancy by hour, B-C dark/feeding ratios, H heatmaps,
+D-G params by rank (brackets: paired t, Holm over 6 pairs, p < 0.05)
+state_parameters_long.csv + state_occupancy_by_hour.csv -> figure5_state_ddm
 =#
 
 using Pkg
@@ -33,8 +22,7 @@ using PlotUtils: optimize_ticks
 gr()
 Random.seed!(20260915)   # jitter in panels D-G
 
-# Helvetica so text stays editable in Illustrator. Panels render at their layout
-# size (see PANELS); GR uses 100 dpi, 1 px = 0.72 pt.
+# Helvetica so svg text stays editable; GR 1 px = 0.72 pt
 const FONT_FAMILY = "Helvetica"
 default(;
     fontfamily=FONT_FAMILY,
@@ -178,13 +166,9 @@ end
 stars(p) = p < 1e-4 ? "****" : p < 1e-3 ? "***" : p < 1e-2 ? "**" : "*"
 
 """
-Box and dots of one parameter by rank. `ymax` clips the axis: points above it
-are drawn as open triangles at the top edge, so one outlier cannot squash the
-boxes. Nothing is dropped from the tests. `top` overrides the axis top, which
-the composer raises by exactly what the significance brackets need.
-
-Returns the plot, the post-hoc table and the bracket spec: the significant
-pairs, the top of the drawn data over each rank, and the axis range.
+Box and dots of one parameter by rank. Points above `ymax` are drawn as open
+triangles at the top edge (nothing is dropped from the tests); `top` overrides the
+axis top. Returns the plot, the post-hoc table and the bracket spec.
 """
 function box_panel(col::Symbol; ylabel, xlabel="", ymin=0.0, ymax=Inf, top=nothing)
     Y = wide(col)
@@ -220,13 +204,9 @@ function box_panel(col::Symbol; ylabel, xlabel="", ymin=0.0, ymax=Inf, top=nothi
 end
 
 """
-Heights for straight significance brackets, packed like the Illustrator layout:
-each line sits `gap` above the highest thing under its own span, short brackets
-first. Heights are tracked on a half-rank grid (odd index = rank, even =
-midpoint). A placed bracket blocks its interior, where its stars sit, by a full
-`step`, but its end points only by its own line, so a neighbour that merely
-shares an end point sits beside it rather than a tier up.
-`skyline[k]` is the top of the drawn data over rank k; any units that grow upward.
+Heights for straight significance brackets, short spans first, each `gap` above the
+highest thing under its own span. Tracked on a half-rank grid (odd index = rank,
+even = midpoint); `skyline[k]` is the top of the drawn data over rank k.
 """
 function place_brackets(sig::DataFrame, skyline::Vector{Float64}, gap, step)
     sky = repeat(skyline; inner=2)[1:(2K - 1)]
@@ -243,9 +223,7 @@ function place_brackets(sig::DataFrame, skyline::Vector{Float64}, gap, step)
     return y
 end
 
-# Blank y labels reserve space; the composer sets the names as live text
-# (GR has no τ or subscript zero). τ and v have fixed ranges; one rat at v ≈ 1.9
-# is off-scale.
+# blank ylabels, names added as svg text; one rat off-scale at v ≈ 1.9
 pD, ph_B, br_D = box_panel(:B; ylabel=" ")
 pE, ph_bias, br_E = box_panel(:bias_mag; ylabel=" ")
 pF, ph_tau, br_F = box_panel(:tau; ylabel=" ", top=1.15)
@@ -317,9 +295,7 @@ for (i, r) in enumerate(rat_order)
 end
 annotate!(rat_names, 0.05, (NRAT + 1) / 2, text("rat", FONT_FAMILY, 9, :center, rotation=90))
 
-# Assemble: each panel rendered alone at its box size in the Illustrator
-# layout (Figure_6_24HR_edited.svg), nested into one SVG; letters and shared
-# axis labels added as live text
+# assemble: panels at box sizes from Figure_6_24HR_edited.svg, one svg
 
 const PANELS = [   # name => (x, y, width, height) in pt
     "A" => (0, 0, 285, 200),

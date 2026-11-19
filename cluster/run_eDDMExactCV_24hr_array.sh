@@ -9,6 +9,6 @@
 
 cd "/projectnb/depaqlab/rsenne/hmmddm/24_Hour_Behavior/"
 
-# Held-out MLDDM scoring on the DDM-HMM CV folds. Needs the full-data fits first.
-# Merge afterwards with: GROUP=24hr julia notebooks/eDDMExact.jl cv-merge
+# held-out MLDDM on the DDM-HMM CV folds; needs full-data fits first
+# merge: GROUP=24hr julia notebooks/eDDMExact.jl cv-merge
 GROUP=24hr julia -t $((NSLOTS-1)) "notebooks/eDDMExact.jl" cv

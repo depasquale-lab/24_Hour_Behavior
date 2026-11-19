@@ -470,12 +470,7 @@ end
 end
 
 # ╔═╡ dada0029-0000-4000-8000-000000000029
-# `do`-block-friendly: the function is the first arg, so calls look like
-# `cached_chain("chain_acc") do ... end`.
-#
-# Uses `Serialization` rather than `JLD2` because current Turing returns a
-# `FlexiChain` from `sample()`, and JLD2 can't round-trip that type cleanly.
-# Old `.jld2` caches are ignored; delete `notebooks/cache/*.jld2` if you want.
+# Serialization, not JLD2: JLD2 can't round-trip Turing's FlexiChain
 function cached_chain(sample_fn::Function, name::String)
     path = joinpath(CACHE_DIR, name * ".jls")
     if isfile(path)

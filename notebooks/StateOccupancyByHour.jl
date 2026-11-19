@@ -128,10 +128,9 @@ rat_df.dt = DateTime.(rat_df.trial_datetime, dateformat"yyyy-mm-dd HH:MM:SS")
 """
     data_for_rat(rat)
 
-Same sequence construction the fits used: one sequence per calendar day, trials
-in table order within a day. Returns the observations, the sequence ends, the
-animal's rows and the permutation `ord` mapping posterior column t to row
-`ord[t]` of `sub`.
+Same sequence construction the fits used: one sequence per calendar day, trials in
+table order. Returns the observations, sequence ends, the animal's rows `sub`, and
+`ord`, mapping posterior column t to row `ord[t]` of `sub`.
 """
 function data_for_rat(rat::AbstractString)
     sub = rat_df[rat_df.name .== rat, :]

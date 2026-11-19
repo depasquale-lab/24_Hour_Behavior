@@ -1,22 +1,8 @@
 #=
-Within-session vs. between-session control. Each session is split in time:
-first TRAIN_FRAC of trials train, the rest are held out.
-
-  ddm              one DDM per rat (sessions pooled)
-  session_ddm      one DDM per session, all 4 parameters free
-  session_ddm_tau  one DDM per session, τ fixed at the rat-level value
-  hmm              K-state DDM-HMM on the training parts; held-out end scored
-                   conditional on its session's start
-
-If the HMM beats the per-session DDMs, its gain is within-session, not just
-"sessions differ". Sessions shorter than MIN_TRIALS are dropped.
-
-Task: $SGE_TASK_ID or ARGS[1] = rat index; none -> every rat. `merge` stitches
-the per-rat CSVs. FULL_FIT=1 (daily default) also fits the K-state DDM-HMM on
-all of the rat's data, to OUT_DIR/full_fits/.
-
-Env knobs: GROUP (daily | 24hr), K (4), N_INITS (10), MAX_ITER (100),
-TRAIN_FRAC (0.8), MIN_TRIALS (50), FULL_FIT (1 for daily, 0 for 24hr)
+Within- vs between-session control: first TRAIN_FRAC of each session trains,
+rest held out. Models: ddm (pooled), session_ddm, session_ddm_tau, hmm.
+$SGE_TASK_ID or ARGS[1] = rat; `merge` stitches CSVs; FULL_FIT=1 also fits all
+data. Env: GROUP, K, N_INITS, MAX_ITER, TRAIN_FRAC, MIN_TRIALS, FULL_FIT
 =#
 
 using Pkg

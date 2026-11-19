@@ -1,14 +1,7 @@
 #=
-Session-blocked 5-fold CV over K = 1..5 for the session-based ("daily") animals;
-N_INITS restarts per fit, best by training logL, scored on held-out sessions.
-Folds, restarts and Baum-Welch settings match CrossValidateVTied.jl / FitDDMHMMs.jl.
-Unlike the raw-logL sweep (StateSweepDaily.jl), held-out logL can select a K.
-
-One task = one (rat, fold): $SGE_TASK_ID (rat-major index), or $RAT_IDX/$FOLD_IDX,
-or ARGS; none -> every rat and fold, serially.
-
-Env knobs: GROUP=daily|24hr, SHUFFLE=0|1, RAT_SET=fitted|all, SKIP_DONE=1|0,
-K_LIST=1,2,3,4,5, N_INITS, MAX_ITER, N_FOLDS
+Session-blocked 5-fold CV over K = 1..5; held-out logL per (rat, K, fold).
+Task = (rat, fold): $SGE_TASK_ID, $RAT_IDX/$FOLD_IDX or ARGS; none -> all.
+Env: GROUP, SHUFFLE, RAT_SET, SKIP_DONE, K_LIST, N_INITS, MAX_ITER, N_FOLDS
 =#
 
 using Pkg
@@ -37,9 +30,8 @@ const MAX_ITER = parse(Int, get(ENV, "MAX_ITER", "100"))
 const GROUP = get(ENV, "GROUP", "daily")
 GROUP in ("daily", "24hr") || error("GROUP must be \"daily\" or \"24hr\", got \"$GROUP\"")
 
-# RAT_SET: "fitted" = daily rats with K4 fits in results/ddm_hmm; "all" = every
-# animal (24hr always). SHUFFLE=1 permutes trial order within training sessions
-# (a mixture of DDMs); held-out sessions keep their real order.
+# RAT_SET fitted = daily rats with K4 fits; 24hr always all
+# SHUFFLE=1: permute trials within train sessions only (mixture-of-DDMs control)
 const SHUFFLE = get(ENV, "SHUFFLE", "0") == "1"
 
 const RAT_SET = GROUP == "24hr" ? "all" : get(ENV, "RAT_SET", "fitted")
@@ -169,7 +161,7 @@ count_free_params(K::Int) = (K - 1) + K * (K - 1) + 4K
     fit_best(train_data, train_seq_ends, n_states)
 
 Baum-Welch from `n_inits` random restarts on the TRAINING sessions only.
-The winning restart is picked by training logL — the held-out set is never
+The winning restart is picked by training logL; the held-out set is never
 touched during fitting.
 """
 function fit_best(

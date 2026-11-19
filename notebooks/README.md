@@ -108,6 +108,8 @@ repository root. Slow fits run as SGE array jobs via the
 | `PlotFigure5.jl` | Figure 5 (composed SVG plus single panels in `figure5_panels/`): occupancy by hour, dark/feeding enrichment, parameters by rank with RM-ANOVA + Holm post-hocs, rat × rank heatmaps. |
 | `ParameterRecovery.jl` | Parameter recovery: simulate from each rat's final fit, refit blind, at full size and 10/25/50 % of sessions. |
 | `PlotParameterRecovery.jl` | Parameter-recovery figure and summary tables. |
+| `MLDDMRecovery.jl` | Parameter recovery for the multilevel DDM: simulate each rat's own trial count from its exact fit (`eddm_exact/`), refit blind, plus a truth-initialised fit and quadrature check. |
+| `PlotMLDDMRecovery.jl` | Multilevel-DDM recovery figure (true vs. recovered m and σ0) and summary tables. |
 | `StateSweepDaily.jl`, `MergeStateSweep.jl` | Sweeps K = 1…5 on the session-based ("daily") animals and records full-data logL, AIC and BIC. |
 | `CrossValidateStatesDaily.jl`, `MergeStateSweepCV.jl` | Session-blocked 5-fold cross-validation over K = 1…5 for the same animals. |
 | `PlotStateSweepDaily.jl`, `PlotStateSweepCV.jl` | Plots logL/BIC against K and held-out logL against K. |
@@ -117,7 +119,7 @@ repository root. Slow fits run as SGE array jobs via the
 | `SessionCohortSummary.jl` | Joins held-out results for both cohorts (DDM-HMM K = 1…5, shuffled mixture, multilevel DDM, within-session split), paired Wilcoxon tests, within-session switching from held-out Viterbi paths. Writes `results/session_cohort/`. |
 | `SessionCohortACF.jl` | Within-session RT autocorrelation, real vs. simulated from each rat's full-data DDM-HMM and multilevel DDM, both cohorts. Writes `results/session_cohort/rt_acf_by_rat.csv`, `rt_acf_error.csv`. |
 | `PlotSessionCohortFigure.jl` | Session-vs-24 h figure: held-out gain vs. each competitor, and RT autocorrelation model vs. data. Writes the figure and per-panel SVGs to `results/session_cohort/panels/`. |
-| `PlotStateGenerality.jl`, `PlotStateStructure.jl` | Cross-animal state matching figures (see [below](#supplementary-analyses)). |
+| `PlotStateGenerality.jl` | Cross-animal state matching figure (see [below](#supplementary-analyses)). |
 
 ## 6. Reproducing the published figures
 
@@ -169,6 +171,7 @@ Scripts are listed in run order. Output paths are relative to `results/`.
 | Figure | Produced by | Output files |
 |---|---|---|
 | Parameter recovery | `ParameterRecovery.jl`, `PlotParameterRecovery.jl` | `parameter_recovery/parameter_recovery.svg`, `recovery_long.csv`, `recovery_summary.csv`, `recovery_scaling.csv` |
+| Multilevel-DDM parameter recovery | `MLDDMRecovery.jl`, `PlotMLDDMRecovery.jl` | `mlddm_recovery/mlddm_recovery.svg`, `recovery_summary.csv`, `recovery_long.csv`, `recovery_stats.csv` |
 | States are comparable across animals | `ExtractStateParameters.jl`, `PlotStateComparability.jl` | `final_ddmhmms/state_comparability.svg` |
 | State-conditioned behavior | `ExtractStateParameters.jl`, `PlotStateBehavior.jl` | `final_ddmhmms/state_behavior.svg` |
 | States predict trial initiation | `ExtractStateParameters.jl`, `StateEngagementITI.jl`, `PlotStateEngagementITI.jl` | `final_ddmhmms/state_engagement_iti.svg`, `state_engagement_*.csv`, `state_bout_profile.csv` |
@@ -194,8 +197,7 @@ None of these is a manuscript figure.
 
 | Script | Purpose | Output |
 |---|---|---|
-| `PlotStateGenerality.jl` | Matching states across animals: every label-free route agrees with accuracy rank in 16-17/18 animals (absolute-parameter control 7/18); PCA on absolute vs within-animal parameters (accuracy R² 0.37 vs 0.70); within-animal PC1 vs accuracy rank. | `final_ddmhmms/state_generality.svg` |
-| `PlotStateStructure.jl` | PCA, k-means and consensus alignment of states without using accuracy. Rank structure appears only with within-animal z-scoring. | `final_ddmhmms/state_structure.svg` |
+| `PlotStateGenerality.jl` | Whether states are comparable across animals: accuracy rank against the rank from each of seven orderings (within-animal PC1, consensus matching, held-out template matching, non-decision time, occupancy, psychometric slope, and absolute-parameter PC1 as a control). Exact rank is recovered for 51–60% of states (chance 25%; 37% for consensus); the control gets 31% (n.s.). Also PCA on absolute vs. within-animal parameters (accuracy R² 0.37 vs. 0.70) and within-animal PC1 by accuracy rank. | `final_ddmhmms/state_generality.svg` |
 | `CrossValidateVTied.jl` | Held-out logL for full vs. tied-drift fits. | `ddm_hmm_constrained/cv_*_fold*.csv` |
 | `CompareVTiedVsFull.jl` | How the other parameters compensate when drift is tied across states. | `ddm_hmm_constrained/v_tied_compensation/` |
 | `DirectGradientDDMHMM.jl` | Single-rat check of the direct-gradient fitter. | `ddm_hmm_constrained/direct_gradient_<rat>/` |
@@ -224,6 +226,7 @@ path; edit that and the `#$ -P` project before `qsub cluster/<wrapper>.sh`.
 | `run_directGradient.sh`, `run_directGradient_array.sh` | `DirectGradientDDMHMM.jl`, `FitOneRatGradient.jl` | rats |
 | `submit_directGradient_subset.sh` | `FitOneRatGradient.jl` | a subset of rats |
 | `run_parameterRecovery.sh` | `ParameterRecovery.jl` | recovery tasks |
+| `run_mlddmRecovery_array.sh` | `MLDDMRecovery.jl` | rat × rep (needs `eddm_exact/` fits) |
 | `run_stateSweepDaily_array.sh` | `StateSweepDaily.jl` | daily rats |
 | `run_crossValidateStatesDaily_array.sh` | `CrossValidateStatesDaily.jl` | rat × fold |
 | `run_crossValidateStates24hr_array.sh` | `CrossValidateStatesDaily.jl` (`GROUP=24hr`) | rat × fold |
@@ -271,7 +274,8 @@ The analysis scripts form a second pipeline, rooted at the final K = 4 fits:
    `PlotStateComparability.jl`; `PlotStateBehavior.jl`; `StateEngagementITI.jl`
    then `PlotStateEngagementITI.jl`; `StateOccupancyByHour.jl` then
    `PlotFigure5.jl` (Fig. 5).
-4. `ParameterRecovery.jl` (cluster), then `PlotParameterRecovery.jl`.
+4. `ParameterRecovery.jl` (cluster), then `PlotParameterRecovery.jl`. After the
+   `eDDMExact.jl` fits: `MLDDMRecovery.jl` (cluster), then `PlotMLDDMRecovery.jl`.
 5. `StateSweepDaily.jl` (cluster), `MergeStateSweep.jl`, `PlotStateSweepDaily.jl`.
 6. `CrossValidateStatesDaily.jl` (cluster), `MergeStateSweepCV.jl`, `PlotStateSweepCV.jl`.
 

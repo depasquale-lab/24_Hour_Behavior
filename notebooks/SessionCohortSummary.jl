@@ -1,21 +1,8 @@
 #=
-Session vs. 24 hr cohort: one table of held-out fits plus within-session switching.
-
-Reads (both cohorts, same session-blocked folds):
-  DDM-HMM K = 1..5     results/ddm_hmm_state_sweep/cv{,_24hr}/per_task_summaries/
-  shuffled K = 4       results/ddm_hmm_state_sweep/cv{,_24hr}_shuffled/per_task_summaries/
-  multilevel DDM       results/eddm_exact{_daily,}/cv/
-  within-session split results/session_cohort/split_{daily,24hr}/   (SessionSplitDDM.jl)
-
-Only (rat, fold) pairs present for every model are compared; missing models are
-skipped with a warning.
-
-Writes results/session_cohort/:
-  heldout_by_rat.csv     per rat: held-out logL per trial for every model
-  heldout_vs_K.csv       per rat × K: Δ held-out logL per trial vs K = 1
-  heldout_stats.csv      paired contrasts per cohort (Wilcoxon signed-rank)
-  switching_by_rat.csv   Viterbi-decoded held-out sessions: switches, dwell, states used
-  dwell_lengths.csv      every within-session dwell (run length, censored flag)
+Daily vs 24 hr cohort: held-out fit table plus within-session switching.
+Reads CV sweeps (+ shuffled), eddm_exact CV and split_{daily,24hr} results.
+Writes results/session_cohort/: heldout_by_rat, heldout_vs_K, heldout_stats,
+split_by_rat, switching_by_rat, dwell_lengths (.csv)
 =#
 
 using Pkg

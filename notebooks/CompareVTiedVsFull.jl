@@ -121,10 +121,8 @@ end
 """
     match_states(hmm_ref, hmm_other, obs_seq, seq_ends)
 
-Run forward–backward for both HMMs, then find the permutation `σ` mapping
-`hmm_other`'s state labels onto `hmm_ref`'s: state `k` in the reference
-corresponds to state `σ[k]` in the other model. Chosen as the permutation
-maximizing ∑_t ∑_k γ_ref[k,t] · γ_other[σ[k],t].
+Permutation `σ` mapping `hmm_other`'s states onto `hmm_ref`'s (reference state `k`
+is state `σ[k]` in the other model), maximizing ∑_t ∑_k γ_ref[k,t] · γ_other[σ[k],t].
 """
 function match_states(hmm_ref, hmm_other, obs_seq, seq_ends)
     γ_ref = _fb_gamma(hmm_ref, obs_seq, seq_ends)

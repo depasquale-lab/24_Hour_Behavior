@@ -153,9 +153,8 @@ end
     weighted_logistic(x, y, w)
 
 Posterior-weighted logistic regression of `y` (0/1) on `x`, fit by IRLS.
-Returns `(intercept, slope)`. The slope is the psychometric sensitivity in units
-of P(right) per flash difference, computed from trial assignments rather than
-from the fitted DDM parameters.
+Returns `(intercept, slope)`; the slope is the psychometric sensitivity per flash
+difference, from trial assignments rather than the fitted DDM parameters.
 """
 function weighted_logistic(x::Vector{Float64}, y::Vector{Float64}, w::Vector{Float64})
     β = [0.0, 0.0]

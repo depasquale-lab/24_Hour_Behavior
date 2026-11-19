@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="820" height="400" viewBox="0 0 3280 1600">
+<defs>
+  <clipPath id="clip720">
+    <rect x="0" y="0" width="3280" height="1600"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip720)" d="M0 1600 L3280 1600 L3280 0 L0 0  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip721">
+    <rect x="1936" y="109" width="1297" height="1297"/>
+  </clipPath>
+</defs>
+<path clip-path="url(#clip720)" d="M296.047 1405.88 L1592.51 1405.88 L1592.51 109.411 L296.047 109.411  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<defs>
+  <clipPath id="clip722">
+    <rect x="296" y="109" width="1297" height="1297"/>
+  </clipPath>
+</defs>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="296.047,1405.88 1592.51,1405.88 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="374.654,1405.88 374.654,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="706.705,1405.88 706.705,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1038.76,1405.88 1038.76,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1370.81,1405.88 1370.81,1386.98 "/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 374.654, 1474.77)" x="374.654" y="1474.77">−1.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 706.705, 1474.77)" x="706.705" y="1474.77">−0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1038.76, 1474.77)" x="1038.76" y="1474.77">0.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1370.81, 1474.77)" x="1370.81" y="1474.77">0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:53px; text-anchor:middle;" transform="rotate(0, 944.28, 1554.16)" x="944.28" y="1554.16">true</text>
+</g>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="296.047,1405.88 296.047,109.411 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="296.047,1327.27 314.938,1327.27 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="296.047,995.218 314.938,995.218 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="296.047,663.167 314.938,663.167 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="296.047,331.116 314.938,331.116 "/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 200.013, 1344.77)" x="200.013" y="1344.77">−1.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 200.013, 1012.72)" x="200.013" y="1012.72">−0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 213.394, 680.667)" x="213.394" y="680.667">0.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 213.394, 348.616)" x="213.394" y="348.616">0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:53px; text-anchor:middle;" transform="rotate(-90, 94.192, 757.643)" x="94.192" y="757.643">recovered</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:59px; text-anchor:start;" transform="rotate(0, 296.047, 51.6)" x="296.047" y="51.6">A   hyperparameter means m</text>
+</g>
+<polyline clip-path="url(#clip722)" style="stroke:#999999; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 10" points="296.047,1405.88 1592.51,109.411 "/>
+<circle clip-path="url(#clip722)" cx="1244.51" cy="461.989" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1283.8" cy="399.031" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1243.62" cy="444.217" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1464.13" cy="229.873" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1508.16" cy="189.018" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1409.94" cy="307.321" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1348.33" cy="338.981" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1300.44" cy="341.202" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1418.76" cy="276.818" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1260.72" cy="375.882" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1097.77" cy="605.218" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1122.64" cy="582.595" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1398.75" cy="300.549" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1016.04" cy="679.173" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="868.23" cy="928.83" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1387.82" cy="313.982" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1138.7" cy="551.459" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1246" cy="410.723" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="884.737" cy="814.983" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="779.148" cy="920.59" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="993.048" cy="714.233" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1032.01" cy="684.052" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="931.321" cy="772.849" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="933.298" cy="775.778" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="935.725" cy="771.14" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="991.589" cy="727.399" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="914.9" cy="788.801" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="910.391" cy="786.363" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="978.675" cy="724.155" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="802.179" cy="904.168" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="777.912" cy="932.036" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="785.201" cy="918.728" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="995.466" cy="688.019" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="681.661" cy="1050.54" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="757.133" cy="947.337" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="871.133" cy="843.12" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="875.39" cy="826.604" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="942.348" cy="756.483" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="856.128" cy="871.354" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="733.111" cy="961.649" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="806.181" cy="896.91" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="933.083" cy="794.476" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1267.08" cy="468.802" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="808.004" cy="926.439" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="982.674" cy="748.374" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="806.511" cy="849.949" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="936.538" cy="764.567" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="937.362" cy="743.832" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1133.24" cy="588.338" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1173.58" cy="522.368" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1271.82" cy="325.922" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="999.702" cy="749.922" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1059.28" cy="631.571" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="902.9" cy="828.863" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="378.339" cy="1326.27" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1114.14" cy="583.807" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1202.83" cy="507.131" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="670.202" cy="1015.12" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="706.061" cy="991.392" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="946.588" cy="747.954" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1042.19" cy="656.948" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1088.57" cy="608.233" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1364.54" cy="335.516" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1122.06" cy="576.168" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="754.454" cy="925.951" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="488.651" cy="1181.02" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="496.414" cy="1183.44" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="467.209" cy="1227.54" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="518.632" cy="1212.95" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="1505.83" cy="219.86" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="592.564" cy="1119.05" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip722)" cx="905.969" cy="775.025" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<path clip-path="url(#clip720)" d="M339.279 372.688 L941.906 372.688 L941.906 152.626 L339.279 152.626  Z" fill="#000000" fill-rule="evenodd" fill-opacity="0"/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:0; fill:none" points="339.279,372.688 941.906,372.688 941.906,152.626 339.279,152.626 339.279,372.688 "/>
+<circle clip-path="url(#clip720)" cx="396.921" cy="196.638" r="20.16" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 454.564, 211.638)" x="454.564" y="211.638">log B  (r = 0.99, n = 18)</text>
+</g>
+<circle clip-path="url(#clip720)" cx="396.921" cy="240.651" r="20.16" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 454.564, 255.651)" x="454.564" y="255.651">log τ  (r = 1.00, n = 18)</text>
+</g>
+<circle clip-path="url(#clip720)" cx="396.921" cy="284.663" r="20.16" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 454.564, 299.663)" x="454.564" y="299.663">log v  (r = 0.98, n = 18)</text>
+</g>
+<circle clip-path="url(#clip720)" cx="396.921" cy="328.675" r="20.16" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 454.564, 343.675)" x="454.564" y="343.675">logit a0  (r = 1.00, n = 18)</text>
+</g>
+<path clip-path="url(#clip720)" d="M1936.05 1405.88 L3232.51 1405.88 L3232.51 109.411 L1936.05 109.411  Z" fill="#ffffff" fill-rule="evenodd" fill-opacity="1"/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,1405.88 3232.51,1405.88 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1973.89,1405.88 1973.89,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2163.13,1405.88 2163.13,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2352.36,1405.88 2352.36,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2541.59,1405.88 2541.59,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2730.83,1405.88 2730.83,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="2920.06,1405.88 2920.06,1386.98 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="3109.29,1405.88 3109.29,1386.98 "/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1973.89, 1474.77)" x="1973.89" y="1474.77">−2.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2163.13, 1474.77)" x="2163.13" y="1474.77">−2.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2352.36, 1474.77)" x="2352.36" y="1474.77">−1.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2541.59, 1474.77)" x="2541.59" y="1474.77">−1.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2730.83, 1474.77)" x="2730.83" y="1474.77">−0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 2920.06, 1474.77)" x="2920.06" y="1474.77">0.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 3109.29, 1474.77)" x="3109.29" y="1474.77">0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:53px; text-anchor:middle;" transform="rotate(0, 2584.28, 1554.16)" x="2584.28" y="1554.16">true</text>
+</g>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,1405.88 1936.05,109.411 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,1368.03 1954.94,1368.03 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,1178.8 1954.94,1178.8 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,989.563 1954.94,989.563 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,800.33 1954.94,800.33 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,611.097 1954.94,611.097 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,421.863 1954.94,421.863 "/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" points="1936.05,232.63 1954.94,232.63 "/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1840.01, 1385.53)" x="1840.01" y="1385.53">−2.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1840.01, 1196.3)" x="1840.01" y="1196.3">−2.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1840.01, 1007.06)" x="1840.01" y="1007.06">−1.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1840.01, 817.83)" x="1840.01" y="817.83">−1.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1840.01, 628.597)" x="1840.01" y="628.597">−0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1853.39, 439.363)" x="1853.39" y="439.363">0.0</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:48px; text-anchor:middle;" transform="rotate(0, 1853.39, 250.13)" x="1853.39" y="250.13">0.5</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:53px; text-anchor:middle;" transform="rotate(-90, 1734.19, 757.643)" x="1734.19" y="757.643">recovered</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:59px; text-anchor:start;" transform="rotate(0, 1936.05, 51.6)" x="1936.05" y="51.6">B   trial-level spreads, log σ0</text>
+</g>
+<polyline clip-path="url(#clip721)" style="stroke:#999999; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:1; fill:none" stroke-dasharray="16, 10" points="1936.05,1405.88 3232.51,109.411 "/>
+<circle clip-path="url(#clip721)" cx="2492.73" cy="851.736" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2556.18" cy="805.452" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2709.76" cy="650.837" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2337.21" cy="1035.65" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2498.01" cy="854.092" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2536.51" cy="797.611" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2450.15" cy="958.19" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2617.48" cy="799.485" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2551.76" cy="809.544" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2643.56" cy="735.507" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2689.81" cy="663.191" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2643.17" cy="704.665" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2386.23" cy="998.142" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2674.35" cy="679.95" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2864.86" cy="438.488" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2359.84" cy="1016.14" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2621.72" cy="742.41" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2491.31" cy="958.276" r="16.2" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2235.4" cy="1099.32" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2140.57" cy="1202.09" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2518.15" cy="820.898" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2226.9" cy="1124.21" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2405.96" cy="935.257" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2185.64" cy="1156.19" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2281.85" cy="1066.88" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2508.39" cy="846.485" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2364.87" cy="979.36" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2203.54" cy="1144.85" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2323.1" cy="1013.51" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2422.11" cy="914.087" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2186.16" cy="1155.75" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2405.64" cy="934.807" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2493.89" cy="839.396" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2541.41" cy="798.453" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2424.37" cy="908.406" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2438.65" cy="915.752" r="16.2" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2647.27" cy="762.249" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2470.04" cy="828.315" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2820.27" cy="523.437" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2713.48" cy="712.827" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2302.33" cy="1026.49" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2845.23" cy="518.988" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2801.19" cy="533.277" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2665.07" cy="697.391" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2894.66" cy="444.42" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2460.48" cy="663.641" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2784.27" cy="636.636" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2755.72" cy="680.768" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2502.6" cy="919.98" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2477.24" cy="1007.53" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2982.89" cy="374.692" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2700.33" cy="699.102" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2821.72" cy="541.507" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2667.42" cy="705.631" r="16.2" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2645.35" cy="744.055" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2867.68" cy="475.38" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2907.26" cy="488.303" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="3106.81" cy="236.68" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="3024.65" cy="291.586" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="3032.26" cy="307.551" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2764.91" cy="423.683" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="2838.86" cy="583.235" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<circle clip-path="url(#clip721)" cx="3051.63" cy="272.262" r="16.2" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<path clip-path="url(#clip720)" d="M1979.28 372.688 L2581.91 372.688 L2581.91 152.626 L1979.28 152.626  Z" fill="#000000" fill-rule="evenodd" fill-opacity="0"/>
+<polyline clip-path="url(#clip720)" style="stroke:#000000; stroke-linecap:round; stroke-linejoin:round; stroke-width:4; stroke-opacity:0; fill:none" points="1979.28,372.688 2581.91,372.688 2581.91,152.626 1979.28,152.626 1979.28,372.688 "/>
+<circle clip-path="url(#clip720)" cx="2036.92" cy="196.638" r="20.16" fill="#ff7e0d" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 2094.56, 211.638)" x="2094.56" y="211.638">log B  (r = 0.98, n = 18)</text>
+</g>
+<circle clip-path="url(#clip720)" cx="2036.92" cy="240.651" r="20.16" fill="#d52628" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 2094.56, 255.651)" x="2094.56" y="255.651">log τ  (r = 1.00, n = 18)</text>
+</g>
+<circle clip-path="url(#clip720)" cx="2036.92" cy="284.663" r="20.16" fill="#1f77b4" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 2094.56, 299.663)" x="2094.56" y="299.663">log v  (r = 0.91, n = 18)</text>
+</g>
+<circle clip-path="url(#clip720)" cx="2036.92" cy="328.675" r="20.16" fill="#2ba02b" fill-rule="evenodd" fill-opacity="0.9" stroke="none"/>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 2094.56, 343.675)" x="2094.56" y="343.675">logit a0  (r = 0.88, n = 10)</text>
+</g>
+<g clip-path="url(#clip720)">
+<text style="fill:#000000; fill-opacity:1; font-family:Arial,Helvetica Neue,Helvetica,sans-serif; font-size:41px; text-anchor:start;" transform="rotate(0, 2493.22, 1380.43)" x="2493.22" y="1380.43">Draco logit a0: -4.3</text>
+</g>
+</svg>

@@ -1,18 +1,8 @@
 #=
-Figure for the animal-matched DDM-HMM parameter recovery (ParameterRecovery.jl).
-
-  A–D  true vs recovered DDM parameters (v, B, a₀, τ) for every state of every
-       synthetic rat, coloured by the state's accuracy rank within its rat
-  E    true vs recovered self-transition probability
-  F    example synthetic session: true state vs recovered posterior
-  G    per-trial state decoding: recovered model vs the true generative model
-  H    how fast recovery error shrinks with data: within-rat power-law exponent
-       per parameter, with a rat-bootstrap 95% CI, against the 1/√n rate
-  I    recovery error against dataset size with the fitted power laws, and the
-       real animals' sizes marked
-
-Also writes recovery_long.csv (one row per task × state × parameter) and
-recovery_summary.csv (one row per task).
+Parameter recovery figure from ParameterRecovery.jl tasks.
+A-E true vs recovered v, B, a0, τ, p(stay); F example session; G decoding;
+H error scaling exponent; I error vs n trials
+-> parameter_recovery, recovery_long.csv, recovery_summary.csv
 =#
 
 using Pkg

@@ -1,12 +1,7 @@
 #=
-LL-vs-number-of-states curves for the session-based ("daily") trained animals.
-
-Reads results/ddm_hmm_state_sweep/state_sweep_summary.csv (produced by
-StateSweepDaily.jl + MergeStateSweep.jl) and writes:
-  - ll_vs_K_per_rat        per-trial logL curve, one line per rat
-  - ll_gain_vs_K           ΔlogL per trial relative to K = 1 (rats aligned)
-  - bic_vs_K_per_rat       ΔBIC relative to each rat's best K
-  - state_sweep_winners.csv  the BIC-optimal K per rat
+logL and BIC vs K for daily rats.
+state_sweep_summary.csv -> ll_vs_K_per_rat, ll_gain_vs_K, bic_vs_K_per_rat,
+state_sweep_winners.csv (BIC-best K per rat)
 =#
 
 using Pkg

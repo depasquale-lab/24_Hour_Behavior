@@ -7,7 +7,7 @@
 #$ -pe omp 28           # 20 blind inits + 1 truth-initialised fit run in parallel
 
 # One recovery task per job; TASK indexes TASKS in ParameterRecovery.jl.
-# Submit all 90 with:
+# Submit all 72 with:
 #   for t in $(seq 1 72); do qsub -o logs/ -v TASK=$t run_parameterRecovery.sh; done
 
 module load julia/1.11.7

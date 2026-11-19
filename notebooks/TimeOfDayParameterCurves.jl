@@ -1,11 +1,7 @@
 #=
-DDM parameters across the day: time-of-day DDM vs DDM-HMM.
-  DDM-HMM (final K = 4 fits): per-trial parameter = Σ_k γ_kt θ_k from smoothed posteriors
-  Time-of-day DDM (VARY_TAU=1, all-data fit, best-BIC H): θ(hour)
-Both binned by hour from lights-on (07:30). Also reports the fraction of the
-HMM's trial-level parameter variance explained by hour (between / total).
-
-Writes results/tod_ddm_vary_tau/param_curves_long.csv and param_variance_by_hour.csv.
+DDM params by hour from lights-on: HMM (Σ_k γ_kt θ_k) vs ToD DDM (best-BIC H),
+plus fraction of HMM per-trial param variance explained by hour.
+-> tod_ddm_vary_tau/param_curves_long.csv, param_variance_by_hour.csv
 =#
 
 using Pkg

@@ -1,12 +1,7 @@
 #!/bin/bash -l
-# Submit FitOneRatGradient.jl for an arbitrary subset of rats.
-# Generates a tempfile with the #$ -t and #$ -v directives baked in,
-# so this works even if the local qsub rejects -t / -v on the command line.
-#
-# Usage:
-#   cluster/submit_directGradient_subset.sh 5 12 14 15 18
-#   cluster/submit_directGradient_subset.sh 5,12,14,15,18
-#   cluster/submit_directGradient_subset.sh 5:12:14:15:18
+# submit FitOneRatGradient.jl for a subset of rats
+# bakes -t / -v into a temp job file in case qsub rejects them as args
+# usage: cluster/submit_directGradient_subset.sh 5 12 14 (or 5,12,14 / 5:12:14)
 
 set -euo pipefail
 

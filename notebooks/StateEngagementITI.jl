@@ -1,20 +1,7 @@
 #=
-External validation of the K = 4 tied-full DDM-HMM states against trial
-initiation. The fits see only (RT, choice, correct side), so ITI and trial rate
-are out-of-model predictions of the posterior.
-
-Timing: `init_time[t]` is the latency after trial t, before trial t+1
-(gap[t] = init_time[t] + rt[t+1] + c, c ≈ 5.8 s hardware overhead). So
-    iti_pre[t]  = init_time[t-1]   wait before this trial
-    iti_post[t] = init_time[t]     wait before the next one
-Analyses use session-interior trials only, where both are defined. A session is
-one calendar day, the HMM's sequence unit.
-
-Writes to results/final_ddmhmms (inputs to PlotStateEngagementITI.jl):
-  state_engagement_summary.csv   rat x state: posterior-weighted ITI and trial rate
-  state_engagement_deciles.csv   rat x rank x ITI decile: P(state | ITI)
-  state_engagement_stats.csv     rat-level correlations and AUC with a circular-shift null
-  state_bout_profile.csv         rat x rank x position in a work bout
+K=4 states vs trial initiation (ITI, trial rate), neither seen by the fit.
+iti_pre[t] = init_time[t-1], iti_post[t] = init_time[t]; interior trials only
+-> state_engagement_{summary,deciles,stats}.csv, state_bout_profile.csv
 =#
 
 using Pkg
@@ -143,10 +130,9 @@ rat_df.dt = DateTime.(rat_df.trial_datetime, dateformat"yyyy-mm-dd HH:MM:SS")
 """
     data_for_rat(rat)
 
-Same sequence construction the fits used: one sequence per calendar day, trials
-in table order within a day. Returns the observations, the sequence ends, the
-animal's rows and the permutation `ord` mapping posterior column t to row
-`ord[t]` of `sub`.
+Same sequence construction the fits used: one sequence per calendar day, trials in
+table order. Returns the observations, sequence ends, the animal's rows `sub`, and
+`ord`, mapping posterior column t to row `ord[t]` of `sub`.
 """
 function data_for_rat(rat::AbstractString)
     sub = rat_df[rat_df.name .== rat, :]
@@ -220,10 +206,9 @@ end
 """
     shift_index(blocks, n)
 
-Index vector that circularly shifts each block of `blocks` by an independent
-random offset. Shifting within a session preserves the autocorrelation of the
-state trajectory and the marginal distribution of the posterior, and destroys
-only its alignment to the trial timeline, which is what the null requires.
+Index vector that circularly shifts each block by an independent random offset.
+Keeps the state trajectory's autocorrelation and marginal; breaks only its
+alignment to the trial timeline.
 """
 function shift_index(blocks::Vector{UnitRange{Int}}, n::Int)
     idx = Vector{Int}(undef, n)

@@ -1,17 +1,7 @@
 #=
-State-conditioned behaviour from posterior state assignments.
-
-  A  psychometric functions, P(choose right) against signed evidence
-  B  mean RT against accuracy rank, one line per rat
-  C  psychometric slope against accuracy rank, one line per rat
-
-No chronometric function: the task is free response (a flash every 100 ms until
-the animal commits), so |Δ flashes| is an outcome of RT (r = 0.80), not a
-difficulty level, and RT vs |Δ flashes| is positive by construction. The
-generative Bernoulli probability is not recorded per trial, so B reports RT by state.
-
-Inputs: state_psychometric_long.csv, state_parameters_long.csv and
-state_psychometric_slopes.csv from ExtractStateParameters.jl.
+State-conditioned behaviour: A psychometric, B mean RT, C psych slope by rank.
+no chronometric: free response, so |Δ flashes| tracks RT (r = 0.80)
+state_*.csv from ExtractStateParameters.jl -> state_behavior
 =#
 
 using Pkg

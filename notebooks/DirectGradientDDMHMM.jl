@@ -158,9 +158,7 @@ function neg_logL(θ)
     return -HiddenMarkovModels.logdensityof(hmm, OBS_SEQ; seq_ends=SEQ_ENDS)
 end
 
-# Random θ-space init, wide enough to probe the landscape:
-#   init logits σ=1; trans logits σ=0.7 with diagonal bias ~ U(0.5, 3)
-#   log B ~ N(log 2, 0.8), log v ~ N(0, 1), logit a₀ ~ N(0, 0.8), log τ ~ N(log 0.1, 0.7)
+# wide random init in θ-space
 function random_init_θ()
     θ = zeros(N_PARAMS_EFF)
     θ[1:N_INIT_LOGITS] .= randn(N_INIT_LOGITS) .* 1.0

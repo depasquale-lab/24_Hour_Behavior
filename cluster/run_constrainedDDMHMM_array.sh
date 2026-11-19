@@ -9,6 +9,5 @@
 
 cd "/projectnb/depaqlab/rsenne/hmmddm/24_Hour_Behavior/"
 
-# -t auto lets Julia spin up one thread per core in the -pe allocation.
-# SGE_TASK_ID is read by FitOneRat.jl to pick which rat to fit.
+# SGE_TASK_ID picks the rat in FitOneRat.jl
 julia -t auto "notebooks/FitOneRat.jl"

@@ -23,10 +23,8 @@ const TIED_CONFIGS = [Symbol[], [:τ], [:a₀], [:τ, :a₀], [:v], [:B]]
 
 Random.seed!(69)
 
-# rat_idx, in priority order:
-#   1. $RAT_LIST + $SGE_TASK_ID  (RAT_LIST=5:12:14 with -t 1-3 picks rats 5, 12, 14;
-#                                 ':' separator, since qsub -v splits on ',')
-#   2. $SGE_TASK_ID   3. $RAT_IDX   4. ARGS[1]
+# rat_idx: RAT_LIST[SGE_TASK_ID], else SGE_TASK_ID, RAT_IDX, ARGS[1]
+# e.g. RAT_LIST=5:12:14 with -t 1-3; ':' since qsub -v splits on ','
 function _resolve_rat_idx()
     sge_id = get(ENV, "SGE_TASK_ID", "")
     sge_set = !(isempty(sge_id) || sge_id == "undefined")

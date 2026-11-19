@@ -193,8 +193,8 @@ theme_julia <- function(base_size = 12, base_family = "sans") {
     )
 }
 
-# RAW DOTS (same as before)
-# Accuracy raw summary (pooled trials per integer hour)
+# RAW DOTS
+# Accuracy raw summary (mean of per-animal means per half hour)
 raw_summary <- df %>%
   mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
   group_by(name, hour_bin) %>%
@@ -208,7 +208,7 @@ raw_summary <- df %>%
   ) %>%
   mutate(hour_mid = hour_bin + 0.25)
 
-# RT raw summary (integer hours)
+# RT raw summary (half-hour bins)
 raw_rt <- df %>%
   mutate(hour_bin = floor(hour_cont * 2) / 2) %>%
   group_by(name, hour_bin) %>%

@@ -118,8 +118,8 @@ function convert_constrained(path::AbstractString)
     return DDMHMMFit(hmm, fit.logL, fit.logL_evolution), String(rat), Int(K_STATES)
 end
 
-# Convert a "rich" constrained BSON (keys: hmm_init/hmm_trans/hmm_dists, best_logL,
-# rat, K_STATES, ...). Emissions are stored as `DDMEmission`, not `DriftDiffusionModel`.
+# "rich" constrained BSON (keys: hmm_init/trans/dists, best_logL, rat, K_STATES)
+# emissions stored as DDMEmission
 function convert_rich_constrained(path::AbstractString)
     @load path hmm_init hmm_trans hmm_dists best_logL rat K_STATES
     dists = [DriftDiffusionModel(; B=d.B, v=d.v, a₀=d.a₀, τ=d.τ) for d in hmm_dists]

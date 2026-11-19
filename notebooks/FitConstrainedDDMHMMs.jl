@@ -234,7 +234,6 @@ function StatsAPI.fit!(
     return nothing
 end
 
-# BIC & fitting driver
 """
     count_free_params(K, tied)
 

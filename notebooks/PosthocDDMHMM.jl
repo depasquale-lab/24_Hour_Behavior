@@ -346,8 +346,7 @@ begin
 end
 
 # ╔═╡ aada001b-0000-4000-8000-00000000001b
-# Joint normalization: per state s, ∫correct + ∫incorrect = 1.
-# Each panel's integral equals the (soft) probability of that outcome in state s.
+# joint norm: per state, ∫correct + ∫incorrect = 1
 rt_hist_plot = begin
     pA = plot(layout = (K, 2),
               size   = (900, 300*K),

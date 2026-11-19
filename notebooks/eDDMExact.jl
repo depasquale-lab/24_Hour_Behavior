@@ -1,26 +1,8 @@
 #=
-Exact (maximum marginal likelihood) refit of the per-rat eDDM, replacing the
-variational fit in eDDM.jl. Hyperparameters (m, σ0) by fit_mlddm_exact
-(Gauss–Hermite quadrature, L-BFGS, several starts, quadrature order raised until
-error < 1e-3 nats/trial); per-trial posteriors from trial_posteriors.
-
-Outputs (results/eddm_exact/, same columns as the VI outputs so eDDM_posthoc.jl
-reads either; no ELBO history):
-  eddm_trial_posteriors_by_rat.csv.gz   μ_u* = posterior mean, logσ_u* = log posterior SD
-  eddm_hyperparams_by_rat.csv           m_u*, logσ0_u* = log σ0
-  eddm_fit_summary_by_rat.csv           loglik, BIC, convergence, quadrature error
-
-Task: $SGE_TASK_ID or ARGS[1] = rat index; none -> every rat. `merge` combines
-the per-rat files.
-
-`cv`: the session-blocked 5-fold split of CrossValidateStatesDaily.jl, so
-held-out logL lines up with the DDM-HMM CV. Each fold is refit on its training
-sessions, warm-started from the full-data optimum (one start, fixed quadrature
-order). $SGE_TASK_ID indexes the (rat x fold) grid, rat-major. Writes
-OUT_DIR/cv/<rat>_fold<f>_cv.csv; `cv-merge` stitches them.
-
-Env knobs: GROUP (24hr | daily), N_STARTS (4), Q (8), OUT_DIR, N_FOLDS (5),
-MAX_TRIALS (0 = all; smoke tests only)
+exact (max marginal lik) eDDM per rat, replaces VI fit in eDDM.jl; same columns
+modes: fit rat $SGE_TASK_ID / ARGS[1] (none = all), merge, cv, cv-merge
+cv: CrossValidateStatesDaily.jl folds, warm-started from the full-data fit
+env: GROUP (24hr|daily), N_STARTS, Q, OUT_DIR, N_FOLDS, MAX_TRIALS (0 = all)
 =#
 
 using Pkg

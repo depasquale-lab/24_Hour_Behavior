@@ -8,8 +8,8 @@
 
 cd "/projectnb/depaqlab/rsenne/hmmddm/24_Hour_Behavior/"
 
-# Submit held on every session-cohort job (see notebooks/README.md). Merges all
-# per-task outputs, then builds results/session_cohort/ and the figure.
+# hold on all session-cohort jobs (see notebooks/README.md)
+# merges per-task outputs, builds results/session_cohort/ and the figure
 set -x
 for g in daily 24hr; do
     GROUP=$g julia notebooks/MergeStateSweepCV.jl

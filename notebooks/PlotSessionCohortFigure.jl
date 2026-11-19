@@ -1,17 +1,7 @@
 #=
-Does the DDM-HMM also improve fits on session-level data?
-Session (2 h) and 24 h cohorts side by side. Run SessionCohortSummary.jl and
-SessionCohortACF.jl first.
-
-  A–C  held-out gain over a single DDM per rat, DDM-HMM (y) vs. A multilevel DDM,
-       B per-session DDM (first 80 % / last 20 %), C shuffled-order mixture.
-       Circles = session, squares = 24 h; above the diagonal = DDM-HMM better.
-  D    simulated vs. real RT ACF (mean of lags 1–5), both models
-  E    mean |simulated − real| RT ACF (lags 1–20), DDM-HMM vs MLDDM
-  F    RT ACF explained: 1 − Σ(data − model)² / Σ data² over lags 1–20
-
-Writes results/session_cohort/session_cohort_figure.{svg,png} and one SVG per
-panel to results/session_cohort/panels/.
+Session (2 h) vs 24 h cohort figure. A-C held-out gain vs MLDDM, per-session
+DDM, mixture; D-F RT ACF. Needs SessionCohortSummary.jl, SessionCohortACF.jl.
+-> results/session_cohort/session_cohort_figure.{svg,png}, panels/*.svg
 =#
 
 using Pkg

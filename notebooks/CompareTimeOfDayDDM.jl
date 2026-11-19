@@ -1,14 +1,7 @@
 #=
-Time-of-day DDM vs DDM-HMM on the 24 hr animals.
-
-Inputs: <TOD_DIR>/tod_ddm_summary.csv, results/ddm_hmm_state_sweep/cv_24hr/
-cv_state_sweep_summary.csv, results/bic_summary.csv.
-
-Held-out logL is pooled per trial over folds; a (rat, K) cell missing folds is
-compared on the folds it has. Best H is chosen from 0..3, so the time-of-day
-model can fall back to the DDM.
-
-Outputs: <TOD_DIR>/tod_vs_hmm_cv.csv, <TOD_DIR>/tod_vs_hmm_bic.csv
+Time-of-day DDM vs DDM-HMM, 24 hr rats: held-out logL and all-data BIC.
+Pooled over the folds K = 4 has; best H from 0..3, so H = 0 (DDM) can win.
+tod_ddm_summary.csv, cv_24hr sweep, bic_summary.csv -> tod_vs_hmm_{cv,bic}.csv
 =#
 
 using Pkg

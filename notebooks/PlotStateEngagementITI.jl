@@ -1,25 +1,8 @@
 #=
-The states predict trial initiation, which the model never saw.
-The DDM-HMM is fit to (RT, choice, correct side) only; ITI, trial rate and
-breaks are out-of-model predictions of the posterior.
-
-  A  P(state | ITI decile)
-  B  posterior-weighted ITI by state rank
-  C  posterior-weighted trial rate by state rank
-  D  posterior-weighted P(break > 5 min) by state rank
-  E  E[rank] over the last ten trials of a work bout (bouts split by breaks > 5 min)
-  F  specificity control: per-animal Spearman between E[rank] and log ITI /
-     trial rate, each debiased by its own within-session circular-shift null
-
-The animal is the unit of replication. Each panel reports a trend test (mean
-per-animal Spearman across ranks, or across bout position in E) and a rank 1 ->
-rank 4 contrast with a 95% CI, both by one-sample t test and cross-checked with
-exact Wilcoxon. A strict monotone ordering holds in only 1/18 animals and is not
-claimed; the rank correlation is. F carries no per-animal significance tally:
-the trial-level shift test passes on rho = 0.004 at these trial counts. The
-hour-of-day control is printed for the text, not plotted.
-
-Inputs are the four tables written by StateEngagementITI.jl.
+States vs trial initiation (not in the fit). A P(state | ITI decile),
+B-D ITI / trial rate / P(break) by rank, E E[rank] before break, F control.
+rat = unit: per-rat Spearman, t test + exact Wilcoxon
+StateEngagementITI.jl tables -> state_engagement_iti
 =#
 
 using Pkg
@@ -87,11 +70,8 @@ function ttest1(v::AbstractVector{<:Real}; μ0::Real=0.0)
 end
 
 """
-Exact two-sided Wilcoxon signed-rank test against zero.
-
-Zeros are dropped. Ranks are doubled so that mid-ranks from ties stay integral,
-which lets the null be enumerated exactly by convolution over the 2^n sign
-assignments rather than approximated by a normal.
+Exact two-sided Wilcoxon signed-rank test against zero. Zeros are dropped; ranks
+are doubled so tied mid-ranks stay integral and the null can be enumerated exactly.
 """
 function signrank(v::AbstractVector{<:Real})
     d = filter(!iszero, v)
@@ -179,12 +159,8 @@ for rank in 1:K
 end
 
 """
-Format the animal-level trend statistic for an on-panel annotation.
-
-The number drawn on B-E is the MEAN over animals of the per-animal Spearman
-correlation, with the p value of the one-sample t test on those `NRAT` values.
-It is the trend test described in the header: it uses the animal as the unit of
-replication and says nothing about any individual pair of ranks.
+Label for the animal-level trend on B-E: mean over animals of the per-animal
+Spearman correlation, with the p value of the one-sample t test on the `NRAT` values.
 """
 function trend_label(v::AbstractVector{<:Real})
     t = ttest1(v)
@@ -213,12 +189,8 @@ function annotate_trend!(p, v; xf=0.04, yf=0.96, halign=:left, valign=:top)
 end
 
 """
-Per-animal lines in grey with the across-animal average on top.
-
-`geo = true` draws the geometric mean with error bars from the SEM of the logs.
-Panels B and D span roughly two orders of magnitude across animals and are drawn
-on a log axis, where the geometric mean is the matching centre and the one
-consistent with the multiplicative rank 1 -> rank K contrast reported for them.
+Per-animal lines in grey with the across-animal average on top. `geo = true` draws
+the geometric mean with SEM of the logs, used for the log-axis panels B and D.
 """
 function rank_panel(col::Symbol; ylabel, title, yscale=:identity, yticks=:auto,
                     ylims=:auto, geo::Bool=false)
@@ -254,8 +226,7 @@ function rank_panel(col::Symbol; ylabel, title, yscale=:identity, yticks=:auto,
     return p
 end
 
-# Panels B, C and D: ITI, trial rate and P(break) by state rank. The annotated ρ
-# is the mean per-animal rank correlation, not a pooled-trial correlation.
+# B-D: ITI, trial rate, P(break) by rank; ρ = mean per-rat, not pooled
 
 trend_iti = rank_trend(:iti_pre_geo)
 trend_rate = rank_trend(:trial_rate)
@@ -278,8 +249,7 @@ pD = rank_panel(:p_pause_next; ylabel="P(break > 5 min before next trial)",
                 title="D   worse states precede stopping")
 annotate_trend!(pD, trend_pause)
 
-# Panel E: E[rank] = Σ_k rank_k · P(state k) over the run-up to a break. Bout
-# onset is not shown: no warm-up at the animal level (ρ = -0.27, 10/18, p = 0.14).
+# E: E[rank] before a break; onset omitted, no warm-up (p = 0.14)
 
 erank = combine(groupby(bout, [:rat, :edge, :pos]),
                 [:acc_rank, :posterior] => ((r, p) -> sum(r .* p)) => :erank)
@@ -313,8 +283,7 @@ trend_bout = [-corspearman(Float64.(sort(bend[bend.rat .== r, :], :pos).pos),
               for r in unique(bend.rat)]
 annotate_trend!(pE, trend_bout)
 
-# Panel F: per-animal correlation of E[rank] with initiation behaviour, debiased
-# by each animal's circular-shift null. Inference is the animal-level t test.
+# F: per-rat ρ(E[rank], behaviour) minus shift null; rat-level t test
 
 "Observed per-animal values as dots at `x`, with the across-animal mean ± 95% CI."
 function rho_column!(p, x, obs; color)

@@ -9,6 +9,5 @@
 
 cd "/projectnb/depaqlab/rsenne/hmmddm/24_Hour_Behavior/"
 
-# Same K = 1..5 CV sweep as run_crossValidateStatesDaily_array.sh, on the 24 hr
-# animals (sessions = calendar days). Outputs go to results/ddm_hmm_state_sweep/cv_24hr/.
+# K = 1..5 CV sweep on 24hr rats -> results/ddm_hmm_state_sweep/cv_24hr/
 GROUP=24hr julia -t auto "notebooks/CrossValidateStatesDaily.jl"

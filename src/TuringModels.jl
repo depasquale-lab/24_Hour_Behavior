@@ -31,10 +31,8 @@ Distributions.support(::BernoulliGLM) = Distributions.RealInterval(0, 1)
 """
     glmhmm(data, K)
 
-`data` is a `Vector{Vector{GLMObs}}`, where each `GLMObs.x` is ALREADY augmented
-with a leading 1 (intercept). Number of coefficients per state will be `P1 = length(data[1][1].x)`.
-
-Builds a K-state HMM with Bernoulli-GLM emissions (same β dimension in every state).
+K-state HMM with Bernoulli-GLM emissions (same β dimension in every state).
+`data` is a `Vector{Vector{GLMObs}}`; each `GLMObs.x` must already have a leading 1 (intercept).
 """
 @model function glmhmm(data::Vector{Vector{GLMObs}}, K::Int)
     # infer dimensionality (already includes intercept)

@@ -1,20 +1,8 @@
 #=
-Parameter recovery for the K=4 DDM-HMM with animal-matched ground truth.
-
-Each synthetic dataset clones one rat's final fit (results/final_ddmhmms/final_ddmhmms)
-with that rat's session lengths and real correct-side sequence, then is refit
-blind with the real-data pipeline: 20 random inits, Baum–Welch (nothing tied),
-L-BFGS polish on the marginal likelihood, best logL kept. The truth is used only
-to align state labels afterwards. Choice and RT are sampled by inverse CDF from
-the same WFPT density the fitter uses, so only the estimator is tested.
-
-Tasks (one per SGE array index; see TASKS):
-  full   every rat, all sessions
-  scale  every rat × session fractions (0.1, 0.25, 0.5)
-Each task also runs one fit started at the truth, as a local-optimum diagnostic.
-
-Output: one BSON per task in results/parameter_recovery/tasks, merged by
-PlotParameterRecovery.jl.
+K=4 DDM-HMM parameter recovery, truth cloned from each rat's final fit.
+sim with rat's sessions + correct sides; blind refit, 20 inits, BW + L-BFGS
+tasks (SGE index): full = all sessions, scale = session fracs 0.1/0.25/0.5
+-> results/parameter_recovery/tasks/*.bson (PlotParameterRecovery.jl)
 =#
 
 include(joinpath(@__DIR__, "FitConstrainedDDMHMMs.jl"))
@@ -184,9 +172,7 @@ function stimulus_sessions(rat::AbstractString)
     return [Int.(sub.correct_side_numeric[dates .== d]) for d in sort(unique(dates))]
 end
 
-# Fitting: Baum–Welch as in FitConstrainedDDMHMMs.jl, then L-BFGS polish as in
-# DirectGradientDDMHMM.jl. Baum–Welch often hits its 100-iteration cap, so the
-# polished estimate is reported; the Baum–Welch-only one is kept for comparison.
+# fit: BW then L-BFGS polish (BW often hits the 100-iter cap)
 function run_bw(prior, obs, seq_ends)
     hmm_est, evol = HiddenMarkovModels.baum_welch(
         TiedPriorHMM(prior, Symbol[]),
@@ -216,9 +202,8 @@ HiddenMarkovModels.obs_distributions(h::DualDDMHMM) = h.dists
 """
 Flatten an HMM into θ = [init logits | trans logits (row-major) | (log B, v, logit a₀, log τ) per state].
 
-v is left unconstrained: the likelihood uses |v|, and under v = exp(y) a state whose
-drift reaches ≈0 during Baum–Welch cannot recover because the gradient in y
-vanishes with v.
+v is left unconstrained (the likelihood uses |v|): under v = exp(y) a state whose
+drift reaches ≈0 cannot recover, because the gradient in y vanishes with v.
 """
 function hmm_to_θ(h)
     K = length(h.init)

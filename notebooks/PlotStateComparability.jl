@@ -1,13 +1,6 @@
 #=
-Cross-animal comparability of the hidden states.
-
-Three panels:
-  A  drift rate against accuracy rank, one line per rat
-  B  within-rat Kendall τ between each DDM parameter and state quality
-  C  posterior-weighted accuracy against the DDM discriminability term v·B
-
-Input is `state_parameters_long.csv` from ExtractStateParameters.jl: one row per
-rat × state with the fitted DDM parameters and posterior-weighted behaviour.
+Cross-animal comparability of states: A v by rank, B Kendall τ, C acc vs v·B.
+state_parameters_long.csv (ExtractStateParameters.jl) -> state_comparability
 =#
 
 using Pkg

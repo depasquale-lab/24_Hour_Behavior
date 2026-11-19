@@ -1,15 +1,8 @@
 #=
-Time-of-day DDM baseline for the 24 hr animals: a single-state DDM whose bound,
-drift and starting point are Fourier functions of clock time (τ constant unless
-VARY_TAU=1). H = 0 is the plain DDM; each H warm-starts from H - 1.
-
-Scored on the session-blocked 5-fold split of CrossValidateStatesDaily.jl
-(GROUP=24hr); each H is also fit on all data for BIC.
-
-Task: $SGE_TASK_ID or ARGS[1] = rat index; none -> every rat. `merge`
-concatenates the per-rat CSVs.
-
-Env knobs: H_LIST=0,1,2,3, N_FOLDS, VARY_TAU=0|1
+24 hr time-of-day DDM: B, v, a₀ as Fourier functions of clock hour, H harmonics.
+Same 5-fold split as CrossValidateStatesDaily.jl, plus all-data fit for BIC.
+$SGE_TASK_ID or ARGS[1] = rat index; `merge` stitches CSVs.
+Env: H_LIST, N_FOLDS, VARY_TAU
 =#
 
 using Pkg

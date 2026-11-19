@@ -1,19 +1,7 @@
 #=
-RT autocorrelation: real data vs. DDM-HMM vs. multilevel DDM, both cohorts.
-
-Every session is re-simulated at its own length and stimulus sequence from each
-rat's full-data fit:
-  DDM-HMM (K = 4)  session  results/session_cohort/full_fits/<rat>_K4_daily.bson
-                   24 hr    results/final_ddmhmms/final_ddmhmms/<rat>_K4_tied-full.bson
-  multilevel DDM   results/eddm_exact{_daily,}/eddm_hyperparams_by_rat.csv
-The HMM restarts from its initial distribution each session; the MLDDM draws
-trial parameters iid. ACF is computed within session (lags 1..20) and averaged
-over sessions per rat, identically for real and simulated data. RTs are sampled
-exactly by inverting the first-passage CDF.
-
-Writes results/session_cohort/:
-  rt_acf_by_rat.csv    cohort, rat, source (real/hmm/mlddm), lag, acf
-  rt_acf_error.csv     per rat: mean |model - real| ACF over lags 1..10, per model
+Within-session RT ACF: real vs DDM-HMM vs MLDDM, both cohorts. Each session
+re-simulated with its own stimuli from full-data fits.
+Writes results/session_cohort/rt_acf_by_rat.csv, rt_acf_error.csv
 =#
 
 using Pkg

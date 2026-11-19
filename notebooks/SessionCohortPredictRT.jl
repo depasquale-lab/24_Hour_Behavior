@@ -1,13 +1,7 @@
 #=
-How much trial-to-trial RT variance can each model predict from past trials?
-Held-out sessions only (same folds as CrossValidateStatesDaily.jl). For trial t,
-each model predicts E[RT_t] from trials 1..t-1 and the stimulus s_t:
-  DDM-HMM         filtered P(z_t | y_1..t-1) × each state's E[RT | s_t]
-  multilevel DDM  E[RT | s_t] under the population distribution (iid trials)
-  running mean    mean of the previous w RTs; w picked per fold on training sessions
-Score per rat: R² over all held-out trials, and R² after removing session means.
-
-Writes results/session_cohort/predict_rt_by_rat.csv.
+One-step-ahead RT prediction on held-out sessions: DDM-HMM (filtered), MLDDM
+(iid), running mean. R² raw and within-session, per rat.
+Writes results/session_cohort/predict_rt_by_rat.csv
 =#
 
 using Pkg

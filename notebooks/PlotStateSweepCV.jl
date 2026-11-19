@@ -1,12 +1,7 @@
 #=
-Cross-validated logL-vs-K curves for the session-based ("daily") animals.
-
-Reads results/ddm_hmm_state_sweep/cv/cv_state_sweep_summary.csv (from
-CrossValidateStatesDaily.jl + MergeStateSweepCV.jl) and writes:
-  - cv_test_ll_vs_K          held-out logL/trial vs K, one line per rat (mean over folds)
-  - cv_test_ll_gain_vs_K     Δ held-out logL/trial vs K = 1, with group mean ± SEM
-  - cv_train_vs_test_ll      train vs held-out logL/trial, to show the overfitting gap
-  - cv_state_sweep_winners.csv  the CV-optimal K per rat
+Held-out logL vs K for daily rats.
+cv/cv_state_sweep_summary.csv -> cv_test_ll_vs_K, cv_test_ll_gain_vs_K,
+cv_train_vs_test_ll, cv_state_sweep_winners.csv (CV-best K per rat)
 =#
 
 using Pkg

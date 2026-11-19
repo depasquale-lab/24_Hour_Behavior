@@ -71,8 +71,7 @@ end
 finite_vals = M[isfinite.(M)]
 absmax_val  = isempty(finite_vals) ? 1.0 : maximum(abs.(finite_vals))
 
-# RdYlBu reversed: blue = lower BIC (better than full), red = higher BIC (worse),
-# yellow at zero so the neutral row is visible (not white as with :RdBu).
+# Blues on a fixed 0-15000 scale: darker = larger BIC increase over full.
 p_heat = heatmap(
     CONFIG_ORDER,
     rat_order,

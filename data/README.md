@@ -129,6 +129,8 @@ Scripts are listed in [`notebooks/README.md`](../notebooks/README.md#analysis-sc
 | `parameter_recovery/recovery_summary.csv` | One row per recovery task: `rat`, `rep`, session fraction `frac`, `n_sessions`, `n_trials`, decoding accuracy of the recovered and true models, and logL under the true, recovered, truth-initialised and Baum–Welch-only fits. |
 | `parameter_recovery/recovery_scaling.csv` | Per parameter: within-rat power-law exponent `beta` of scaled recovery error vs. trials, rat-bootstrap 95% CI (`lo`, `hi`), intercept `alpha`, `n_rats`. |
 | `parameter_recovery/recovery_long.csv` | One row per task × state × parameter, comparing true and recovered values. |
+| `mlddm_recovery/recovery_summary.csv` | Multilevel-DDM recovery, one row per task (`rat`, `rep`): `n_trials`, quadrature order, true/blind/truth-initialised hyperparameters `*_m_{B,τ,v,a0}` and `*_s0_*`, logL under each, convergence and quadrature error. |
+| `mlddm_recovery/recovery_long.csv`, `recovery_stats.csv` | The same per task × level × parameter (`true_value`, `blind`, `warm`, `true_at_floor`), and per-parameter Pearson r and error summaries. |
 | `ddm_hmm_state_sweep/` | K = 1…5 sweeps on the session-based animals: raw logL/BIC (`state_sweep_summary.csv`) and 5-fold CV (`cv/cv_state_sweep_summary.csv`), with per-fold BSONs in `cv/`. |
 
 Parameter symbols follow the following convention: `v` drift rate, `B` boundary separation, 
